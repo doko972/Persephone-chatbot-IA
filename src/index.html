@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assistant Pro - HRTélécoms</title>
+    <link rel="stylesheet" href="fonts\css\all.min.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="message-avatar.css" />
+    <link rel="stylesheet" href="voice-mode.css" />
+    <link rel="stylesheet" href="text-to-speech.css" />
+    <link rel="stylesheet" href="search-results.css" />
+    <link rel="stylesheet" href="ui-polish.css" />
+    <link rel="stylesheet" href="conversation-history.css" />
+  </head>
+
+  <body>
+    <!-- Mode réduit : Bouton flottant -->
+    <div id="floatingButton" class="floating-button">
+      <div id="lottie-container"></div>
+    </div>
+
+    <!-- Mode déployé : Chatbot complet -->
+    <div id="chatContainer" class="chat-container hidden">
+      <!-- Header -->
+      <div class="chat-header">
+        <div class="header-left drag-region">
+          <div class="header-icon-container">
+            <div id="lottie-header"></div>
+          </div>
+          <div class="header-info">
+            <h3>HRTélécoms Assistant</h3>
+            <span class="status-text">
+              <span class="status-dot"></span>
+              En ligne
+            </span>
+          </div>
+        </div>
+
+        <!-- Boutons du header -->
+        <div class="header-actions">
+          <button class="icon-btn" id="settingsBtn" title="Paramètres">
+            <i class="fas fa-cog"></i>
+          </button>
+          <button class="voice-button" id="voiceButton" title="Mode vocal">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <button
+            class="icon-btn"
+            id="toggleFullscreenBtn"
+            title="Plein écran (F11)"
+          >
+            <i class="fas fa-expand"></i>
+          </button>
+          <button id="minimizeBtn" class="icon-btn" title="Réduire">
+            <i class="fas fa-minus"></i>
+          </button>
+          <button id="closeBtn" class="icon-btn" title="Fermer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="messagesContainer" class="messages-container">
+        <div class="message bot-message welcome-message">
+          <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div class="message-content">
+            <div class="message-header">HRTélécoms Assistant</div>
+            <p>
+              Bonjour ! Je suis votre assistant professionnel. Comment puis-je
+              vous aider aujourd'hui ?
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing indicator -->
+      <div id="typingIndicator" class="typing-indicator">
+        <div class="typing-indicator-content">
+          <span class="typing-indicator-text">L'assistant réfléchit</span>
+          <div class="typing-dots">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="chat-input-container">
+        <div class="input-wrapper">
+          <textarea
+            id="messageInput"
+            class="message-input"
+            placeholder=""
+            rows="1"
+          ></textarea>
+          <button id="sendButton" class="send-button">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panneau de configuration -->
+    <div id="settingsPanel" class="settings-panel">
+      <div class="settings-header">
+        <h3><i class="fas fa-cog"></i> Paramètres</h3>
+        <button id="closeSettings" class="close-settings">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="settings-content">
+        <!-- SECTION CONNEXION -->
+        <div id="authSection">
+          <div class="form-group">
+            <label for="userEmail"><i class="fas fa-envelope"></i> Email</label>
+            <input
+              type="email"
+              id="userEmail"
+              class="form-input"
+              placeholder="votre@email.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="userPassword"
+              ><i class="fas fa-lock"></i> Mot de passe</label
+            >
+            <input
+              type="password"
+              id="userPassword"
+              class="form-input"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="settings-actions">
+            <button id="loginBtn" class="btn-primary">
+              <i class="fas fa-sign-in-alt"></i> Se connecter
+            </button>
+          </div>
+
+          <div id="authStatus" class="connection-status"></div>
+
+          <div class="auth-footer">
+            <p>
+              <i class="fas fa-info-circle"></i>
+              Pas encore de compte ?
+              <a href="http://127.0.0.1:8000/register" target="_blank"
+                >Créez-en un ici</a
+              >
+            </p>
+          </div>
+        </div>
+
+        <!-- 🆕 SECTION COMPTE (visible après connexion) -->
+        <div id="accountSection" style="display: none">
+          <div class="user-profile">
+            <div class="profile-avatar">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="profile-info">
+              <h4 id="userName">Chargement...</h4>
+              <p id="userEmail2">email@example.com</p>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button id="logoutBtn" class="btn-secondary">
+              <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </button>
+          </div>
+        </div>
+
+        <!-- Séparateur -->
+        <div
+          style="border-top: 1px solid var(--border-color); margin: 2rem 0"
+        ></div>
+
+        <!-- Thème de l'interface -->
+        <div class="form-group">
+          <label><i class="fas fa-palette"></i> Thème de l'interface</label>
+          <div class="theme-toggle-container">
+            <span class="theme-label">
+              <i class="fas fa-moon"></i> Sombre
+            </span>
+            <label class="theme-switch">
+              <input type="checkbox" id="themeToggle" />
+              <span class="theme-slider"></span>
+            </label>
+            <span class="theme-label"> <i class="fas fa-sun"></i> Clair </span>
+          </div>
+        </div>
+
+        <!-- Mémoire de l'assistant -->
+        <div class="form-group">
+          <label><i class="fas fa-brain"></i> Mémoire contextuelle</label>
+          <div class="memory-toggle-container">
+            <label class="memory-switch">
+              <input type="checkbox" id="useContextToggle" checked />
+              <span class="memory-slider"></span>
+            </label>
+            <div class="memory-info">
+              <div class="memory-title">
+                <span id="memoryStatusText">Mémoire activée</span>
+              </div>
+              <div class="memory-description">
+                L'assistant se souviendra de vos conversations précédentes
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Séparateur -->
+        <div
+          style="border-top: 1px solid var(--border-color); margin: 2rem 0"
+        ></div>
+
+        <!-- URL de l'API -->
+        <div class="form-group">
+          <label for="apiUrl"><i class="fas fa-link"></i> URL de l'API</label>
+          <input
+            type="text"
+            id="apiUrl"
+            class="form-input"
+            placeholder="https://chatbot.ateliernormandduweb.fr"
+          />
+        </div>
+
+        <!-- Boutons -->
+        <div class="settings-actions">
+          <button id="testConnection" class="btn-secondary">
+            <i class="fas fa-plug"></i> Tester
+          </button>
+          <button id="saveSettings" class="btn-primary">
+            <i class="fas fa-save"></i> Enregistrer
+          </button>
+        </div>
+
+        <div id="connectionStatus" class="connection-status"></div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="voice-manager.js"></script>
+    <script src="text-to-speech.js"></script>
+    <script src="search-results-renderer.js"></script>
+    <script src="ui-polish.js"></script>
+    <script src="conversation-history.js"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>

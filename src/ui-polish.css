@@ -1,0 +1,513 @@
+/* ============================================
+   UI POLISH - ASSISTANT HRT
+   Timestamps + Scrollbar Custom + Input Amélioré
+   ============================================ */
+
+/* ============================================
+   1. TIMESTAMPS SUR LES MESSAGES
+   ============================================ */
+
+.message-timestamp {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0;
+  margin-top: 4px;
+  transition: opacity 0.2s ease;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Afficher au hover du message */
+.message:hover .message-timestamp {
+  opacity: 0.7;
+}
+
+/* Timestamp pour les messages bot (à gauche) */
+.bot-message .message-timestamp {
+  text-align: left;
+  padding-left: 4px;
+}
+
+/* Timestamp pour les messages user (à droite) */
+.user-message .message-timestamp {
+  text-align: right;
+  padding-right: 4px;
+}
+
+/* Animation d'apparition douce */
+@keyframes timestampFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 0.7;
+    transform: translateY(0);
+  }
+}
+
+.message:hover .message-timestamp {
+  animation: timestampFadeIn 0.3s ease forwards;
+}
+
+/* Style en mode clair */
+:root.light-theme .message-timestamp {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   2. SCROLLBAR CUSTOM ÉLÉGANTE
+   ============================================ */
+
+/* Scrollbar pour le container de messages */
+#messagesContainer::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+#messagesContainer::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 3px;
+  margin: 8px 0;
+}
+
+#messagesContainer::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  opacity: 0.3;
+}
+
+/* Thumb plus visible au hover */
+#messagesContainer:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-hover);
+  opacity: 1;
+}
+
+#messagesContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+  box-shadow: 0 0 6px rgba(90, 185, 234, 0.4);
+}
+
+/* Animation smooth lors du scroll */
+#messagesContainer {
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar pour le settings panel */
+.settings-content::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.settings-content::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 3px;
+  margin: 8px 0;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.settings-content::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  box-shadow: 0 0 6px rgba(90, 185, 234, 0.3);
+}
+
+/* Support Firefox */
+#messagesContainer,
+.settings-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* ============================================
+   3. INPUT STYLÉ AVEC PLACEHOLDER ANIMÉ
+   ============================================ */
+
+/* Wrapper pour l'input avec label flottant */
+.input-wrapper-enhanced {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+/* Label flottant */
+.floating-label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--input-placeholder);
+  font-size: 14px;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  padding: 0 4px;
+  z-index: 1;
+}
+
+/* Label actif (quand il y a du texte ou focus) */
+.input-wrapper-enhanced.has-content .floating-label,
+.message-input:focus + .floating-label {
+  top: -8px;
+  left: 12px;
+  font-size: 11px;
+  color: var(--accent-color);
+  background: var(--bg-input-area);
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+/* Input avec effet glow au focus */
+.message-input {
+  flex: 1;
+  background: var(--input-bg);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 2px solid var(--input-border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--input-text);
+  resize: none;
+  outline: none;
+  max-height: 120px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.5;
+  position: relative;
+}
+
+/* Effet glow au focus */
+.message-input:focus {
+  border-color: var(--accent-color);
+  background: var(--input-focus-bg);
+  box-shadow: 
+    0 0 0 3px rgba(90, 185, 234, 0.1),
+    0 4px 12px rgba(90, 185, 234, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Animation du placeholder natif */
+.message-input::placeholder {
+  color: transparent;
+  transition: color 0.3s ease;
+}
+
+.message-input:not(:focus)::placeholder {
+  color: transparent;
+}
+
+/* Bouton d'envoi avec micro-animations */
+.send-button {
+  width: 48px;
+  height: 48px;
+  background: var(--btn-primary-bg);
+  border: none;
+  border-radius: 14px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(90, 185, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Effet de brillance au hover */
+.send-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.send-button:hover::before {
+  width: 100px;
+  height: 100px;
+}
+
+.send-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(90, 185, 234, 0.4);
+}
+
+.send-button:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+/* Animation de l'icône au hover */
+.send-button i {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.send-button:hover i {
+  transform: translateX(2px);
+}
+
+/* Animation de pulsation quand le message est prêt */
+@keyframes sendButtonPulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(90, 185, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(90, 185, 234, 0.5);
+  }
+}
+
+.send-button.ready {
+  animation: sendButtonPulse 2s ease-in-out infinite;
+}
+
+/* État désactivé */
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  animation: none;
+}
+
+.send-button:disabled::before {
+  display: none;
+}
+
+/* Container de l'input amélioré */
+.chat-input-container {
+  padding: 16px 20px 20px;
+  background: var(--bg-input-area);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 16px 16px;
+  transition: all 0.3s ease;
+}
+
+/* Animation du container quand l'input est focus */
+.chat-input-container:has(.message-input:focus) {
+  background: var(--bg-input-area);
+  border-top-color: rgba(90, 185, 234, 0.3);
+}
+
+/* ============================================
+   INDICATEUR DE CARACTÈRES (optionnel)
+   ============================================ */
+
+.char-counter {
+  position: absolute;
+  bottom: -22px;
+  right: 60px;
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-weight: 500;
+}
+
+.input-wrapper-enhanced:has(.message-input:focus) .char-counter {
+  opacity: 0.6;
+}
+
+.char-counter.warning {
+  color: var(--warning-color);
+  opacity: 1;
+}
+
+.char-counter.error {
+  color: var(--error-color);
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* ============================================
+   ANIMATIONS ADDITIONNELLES
+   ============================================ */
+
+/* Animation de typing dans l'input */
+@keyframes inputTyping {
+  0%, 100% {
+    border-color: var(--input-border);
+  }
+  50% {
+    border-color: var(--accent-color);
+  }
+}
+
+.message-input.typing {
+  animation: inputTyping 1.5s ease-in-out infinite;
+}
+
+/* Effet de shimmer sur le bouton d'envoi */
+@keyframes shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.send-button.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--primary-color) 0%,
+    var(--accent-color) 50%,
+    var(--primary-color) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .message-timestamp {
+    font-size: 9px;
+  }
+
+  .floating-label {
+    font-size: 13px;
+  }
+
+  .message-input {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+
+  .send-button {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  #messagesContainer::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .chat-input-container {
+    padding: 12px 16px 16px;
+  }
+}
+
+/* ============================================
+   MODE CLAIR - AJUSTEMENTS
+   ============================================ */
+
+:root.light-theme .floating-label {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+:root.light-theme .input-wrapper-enhanced.has-content .floating-label,
+:root.light-theme .message-input:focus + .floating-label {
+  color: var(--primary-color);
+  background: var(--bg-input-area);
+}
+
+:root.light-theme .message-input:focus {
+  box-shadow: 
+    0 0 0 3px rgba(63, 114, 175, 0.1),
+    0 4px 12px rgba(63, 114, 175, 0.15);
+}
+
+:root.light-theme .char-counter {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   SMOOTH SCROLLING AMÉLIORÉ
+   ============================================ */
+
+@supports (scrollbar-width: thin) {
+  #messagesContainer,
+  .settings-content {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+}
+
+/* Indicateur de scroll (optionnel) */
+.scroll-indicator {
+  position: absolute;
+  bottom: 90px;
+  right: 25px;
+  width: 36px;
+  height: 36px;
+  background: var(--accent-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(90, 185, 234, 0.3);
+  z-index: 10;
+}
+
+.scroll-indicator.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.scroll-indicator:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(90, 185, 234, 0.4);
+}
+
+.scroll-indicator i {
+  animation: bounceDown 1.5s ease-in-out infinite;
+}
+
+@keyframes bounceDown {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* ============================================
+   AMÉLIORATIONS DE PERFORMANCE
+   ============================================ */
+
+/* Optimisation GPU pour les animations */
+.message-input,
+.send-button,
+.floating-label {
+  will-change: transform;
+}
+
+.send-button::before {
+  will-change: width, height;
+}
+
+/* Désactiver will-change après l'animation */
+.message-input:not(:focus),
+.send-button:not(:hover),
+.floating-label:not(.active) {
+  will-change: auto;
+}
