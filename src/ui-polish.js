@@ -171,7 +171,7 @@ const InputEnhancer = {
 
         this.label = document.createElement('label');
         this.label.className = 'floating-label';
-        this.label.textContent = 'Écrivez votre message...';
+        this.label.textContent = 'Posez votre question, votre altesse...';
         this.label.htmlFor = 'messageInput';
 
         // Insérer avant l'input
