@@ -1,0 +1,108 @@
+/* ============================================
+   MINI ANIMATIONS LOTTIE DANS LES MESSAGES
+   ============================================ */
+
+/* Avatar du bot dans les messages */
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Masquer l'ancienne icône Font Awesome */
+.message-avatar i.fas,
+.message-avatar i.fa {
+  display: none !important;
+}
+
+/* Container pour la mini animation Lottie */
+.message-avatar-lottie {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* SVG de l'animation */
+.message-avatar-lottie svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 40px;
+  max-height: 40px;
+}
+
+/* Animation de pulsation subtile pour l'avatar */
+@keyframes pulse-avatar {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.message-avatar {
+  animation: pulse-avatar 3s ease-in-out infinite;
+}
+
+/* Pause l'animation au survol du message */
+.bot-message:hover .message-avatar {
+  animation-play-state: paused;
+}
+
+/* Style selon le thème */
+.light-theme .message-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+body:not(.light-theme) .message-avatar {
+  background: linear-gradient(135deg, #434343 0%, #000000 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Transitions fluides pour le changement d'animation */
+.message-avatar-lottie {
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+/* États de fade */
+.message-avatar-lottie.fading-out {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.message-avatar-lottie.fading-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Optimisation des performances */
+.message-avatar-lottie {
+  will-change: opacity, transform;
+}
+
+/* Responsive mobile */
+@media (max-width: 768px) {
+  .message-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .message-avatar-lottie svg {
+    max-width: 36px;
+    max-height: 36px;
+  }
+}
