@@ -68,8 +68,14 @@ npm run tauri dev
 # Build production
 npm run tauri build
 
-# Générer les icônes
-npx tauri icon chemin/vers/icon.png
+# Générer les icônes ! L'image doit etre carré !
+# npx tauri icon chemin/vers/icon.png
+projet/
+├── src-tauri/
+│   └── icons/
+│       └── icon.png  ← ICI
+# La commande
+npx @tauri-apps/cli icon src-tauri/icons/icon.png
 
 # Build Android
 npm run tauri android init

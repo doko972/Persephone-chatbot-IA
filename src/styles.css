@@ -1,97 +1,171 @@
+/* ============================================
+   🔥 VARIABLES - THÈME DES ENFERS (CHARLY) 👑
+   ============================================ */
+
 :root {
-  --primary-color: #0a1229;
-  --secondary-color: #3f72af;
-  --accent-color: #5ab9ea;
-  --text-color: #333333;
-  --text-color-w: #ffffff;
-  --light-text: #ffffff;
-  --background-color: #f8f9fa;
-  --dark-background: #121d3a;
-  --success-color: #4caf50;
-  --error-color: #f44336;
-  --warning-color: #ff9800;
-  --bg-main: rgba(10, 18, 41, 0.95);
+  /* === COULEURS PRINCIPALES === */
+  --primary-color: #d61a4d;              /* Rouge sang */
+  --secondary-color: #4a2a5e;            /* Pourpre moyen */
+  --accent-color: #ff4d8a;               /* Lueur rose */
+  --text-color: #ffffff;                 /* Texte principal */
+  --text-color-w: #ffffff;               /* Texte blanc */
+  --light-text: #c74d7e;                 /* Texte rose clair */
+  --background-color: #140a1f;           /* Noir pourpre */
+  --dark-background: #0d0515;            /* Vide obscur */
+  --success-color: #ff4d8a;              /* Success rose */
+  --error-color: #d61a4d;                /* Erreur rouge */
+  --warning-color: #e63462;              /* Warning cramoisi */
+
+  /* === BACKGROUNDS === */
+  --bg-main: linear-gradient(135deg, #140a1f 0%, #2a1a3d 100%);
   --bg-header: linear-gradient(
-    135deg,
-    rgba(18, 29, 58, 0.85) 0%,
-    rgba(63, 114, 175, 0.85) 100%
+    90deg,
+    #2a1a3d 0%,
+    #4a2a5e 50%,
+    #a01538 100%
   );
-  --bg-messages: rgba(10, 18, 41, 0.4);
-  --bg-input-area: rgba(18, 29, 58, 0.8);
-  --bg-settings: rgba(10, 18, 41, 0.98);
-  --msg-bot-bg: rgba(90, 185, 234, 0.12);
-  --msg-bot-border: rgba(90, 185, 234, 0.25);
+  --bg-messages: rgba(42, 26, 61, 0.4);
+  --bg-input-area: rgba(20, 10, 31, 0.8);
+  --bg-settings: rgba(13, 5, 21, 0.98);
+
+  /* === MESSAGES BOT === */
+  --msg-bot-bg: rgba(74, 42, 94, 0.3);
+  --msg-bot-border: rgba(214, 26, 77, 0.5);
   --msg-bot-text: #ffffff;
-  --msg-user-bg: rgba(63, 114, 175, 0.25);
-  --msg-user-border: rgba(63, 114, 175, 0.35);
+
+  /* === MESSAGES USER === */
+  --msg-user-bg: linear-gradient(135deg, #d61a4d 0%, #e63462 100%);
+  --msg-user-border: rgba(214, 26, 77, 0.8);
   --msg-user-text: #ffffff;
-  --input-bg: rgba(255, 255, 255, 0.1);
-  --input-border: rgba(90, 185, 234, 0.2);
+
+  /* === INPUT === */
+  --input-bg: rgba(74, 42, 94, 0.3);
+  --input-border: rgba(214, 26, 77, 0.3);
   --input-text: white;
-  --input-placeholder: rgba(255, 255, 255, 0.5);
-  --input-focus-border: rgba(90, 185, 234, 0.6);
-  --input-focus-bg: rgba(255, 255, 255, 0.15);
+  --input-placeholder: rgba(199, 77, 126, 0.6);
+  --input-focus-border: rgba(255, 77, 138, 0.8);
+  --input-focus-bg: rgba(74, 42, 94, 0.5);
+
+  /* === TEXTES === */
   --text-primary: #ffffff;
-  --text-secondary: #666666;
-  --text-muted: rgba(255, 255, 255, 0.5);
-  --border-color: rgba(90, 185, 234, 0.15);
-  --shadow: 0 4px 20px rgba(63, 114, 175, 0.15);
-  --shadow-large: 0 8px 30px rgba(63, 114, 175, 0.25);
-  --scrollbar-track: rgba(255, 255, 255, 0.05);
-  --scrollbar-thumb: rgba(90, 185, 234, 0.3);
-  --scrollbar-thumb-hover: rgba(90, 185, 234, 0.5);
-  --btn-primary-bg: linear-gradient(135deg, #3f72af 0%, #5ab9ea 100%);
-  --btn-primary-hover: linear-gradient(135deg, #2e5a8f 0%, #4aa9da 100%);
-  --btn-secondary-bg: rgba(90, 185, 234, 0.2);
-  --btn-secondary-hover: rgba(90, 185, 234, 0.3);
-  --status-online: #4caf50;
-  --status-offline: #f44336;
-  --typing-dot: #5ab9ea;
+  --text-secondary: #c74d7e;
+  --text-muted: rgba(199, 77, 126, 0.5);
+
+  /* === BORDURES ET OMBRES === */
+  --border-color: rgba(214, 26, 77, 0.3);
+  --shadow: 0 4px 20px rgba(214, 26, 77, 0.3);
+  --shadow-large: 0 8px 30px rgba(214, 26, 77, 0.5);
+
+  /* === SCROLLBAR === */
+  --scrollbar-track: rgba(42, 26, 61, 0.3);
+  --scrollbar-thumb: rgba(214, 26, 77, 0.5);
+  --scrollbar-thumb-hover: rgba(255, 77, 138, 0.8);
+
+  /* === BOUTONS === */
+  --btn-primary-bg: linear-gradient(135deg, #d61a4d 0%, #e63462 100%);
+  --btn-primary-hover: linear-gradient(135deg, #a01538 0%, #d61a4d 100%);
+  --btn-secondary-bg: rgba(74, 42, 94, 0.4);
+  --btn-secondary-hover: rgba(74, 42, 94, 0.6);
+
+  /* === STATUS === */
+  --status-online: #ff4d8a;
+  --status-offline: #d61a4d;
+  --typing-dot: #ff4d8a;
 }
 
 /* ============================================
-   Variables - THÈME CLAIR 🌞 (Professionnel)
+   ☀️ VARIABLES - THÈME CLAIR (OPTIONNEL)
    ============================================ */
 
 :root.light-theme {
-  --primary-color: #0a1229;
-  --primary-dark: #05091a;
-  --primary-light: #e8f4f8;
-  --secondary-color: #3f72af;
-  --accent-color: #5ab9ea;
-  --bg-main: rgba(248, 249, 250, 0.95);
-  --bg-header: linear-gradient(135deg, #3f72af 0%, #5ab9ea 100%);
-  --bg-messages: rgba(255, 255, 255, 0.8);
-  --bg-input-area: rgba(248, 249, 250, 0.9);
+  /* === COULEURS PRINCIPALES === */
+  --primary-color: #d61a4d;
+  --primary-dark: #a01538;
+  --primary-light: #ffe5f0;
+  --secondary-color: #6b3d7a;
+  --accent-color: #ff4d8a;
+
+  /* === BACKGROUNDS === */
+  --bg-main: linear-gradient(135deg, #fff5f8 0%, #ffe5f0 100%);
+  --bg-header: linear-gradient(90deg, #6b3d7a 0%, #d61a4d 100%);
+  --bg-messages: rgba(255, 255, 255, 0.9);
+  --bg-input-area: rgba(255, 245, 248, 0.95);
   --bg-settings: rgba(255, 255, 255, 0.98);
-  --msg-bot-bg: rgba(90, 185, 234, 0.15);
-  --msg-bot-border: rgba(90, 185, 234, 0.3);
-  --msg-bot-text: #0a1229;
-  --msg-user-bg: rgba(63, 114, 175, 0.85);
-  --msg-user-border: rgba(63, 114, 175, 1);
+
+  /* === MESSAGES BOT === */
+  --msg-bot-bg: rgba(107, 61, 122, 0.15);
+  --msg-bot-border: rgba(107, 61, 122, 0.3);
+  --msg-bot-text: #2a1a3d;
+
+  /* === MESSAGES USER === */
+  --msg-user-bg: linear-gradient(135deg, #d61a4d 0%, #e63462 100%);
+  --msg-user-border: rgba(214, 26, 77, 1);
   --msg-user-text: #ffffff;
+
+  /* === INPUT === */
   --input-bg: rgba(255, 255, 255, 0.9);
-  --input-border: rgba(63, 114, 175, 0.3);
-  --input-text: #333333;
-  --input-placeholder: rgba(0, 0, 0, 0.4);
-  --input-focus-border: rgba(63, 114, 175, 0.6);
+  --input-border: rgba(107, 61, 122, 0.3);
+  --input-text: #2a1a3d;
+  --input-placeholder: rgba(107, 61, 122, 0.5);
+  --input-focus-border: rgba(214, 26, 77, 0.6);
   --input-focus-bg: rgba(255, 255, 255, 1);
-  --text-primary: #333333;
-  --text-secondary: #f3f3f3;
-  --text-muted: #999999;
-  --border-color: rgba(63, 114, 175, 0.2);
-  --shadow: 0 4px 20px rgba(63, 114, 175, 0.15);
-  --shadow-large: 0 8px 30px rgba(63, 114, 175, 0.25);
-  --scrollbar-track: rgba(90, 185, 234, 0.1);
-  --scrollbar-thumb: rgba(63, 114, 175, 0.4);
-  --scrollbar-thumb-hover: rgba(63, 114, 175, 0.6);
-  --btn-primary-bg: linear-gradient(135deg, #3f72af 0%, #5ab9ea 100%);
-  --btn-primary-hover: linear-gradient(135deg, #2e5a8f 0%, #4aa9da 100%);
-  --btn-secondary-bg: rgba(90, 185, 234, 0.15);
-  --btn-secondary-hover: rgba(90, 185, 234, 0.25);
-  --status-online: #4caf50;
-  --status-offline: #f44336;
-  --typing-dot: #3f72af;
+
+  /* === TEXTES === */
+  --text-primary: #2a1a3d;
+  --text-secondary: #6b3d7a;
+  --text-muted: #a8336b;
+
+  /* === BORDURES ET OMBRES === */
+  --border-color: rgba(107, 61, 122, 0.2);
+  --shadow: 0 4px 20px rgba(214, 26, 77, 0.15);
+  --shadow-large: 0 8px 30px rgba(214, 26, 77, 0.25);
+
+  /* === SCROLLBAR === */
+  --scrollbar-track: rgba(107, 61, 122, 0.1);
+  --scrollbar-thumb: rgba(214, 26, 77, 0.4);
+  --scrollbar-thumb-hover: rgba(214, 26, 77, 0.6);
+
+  /* === BOUTONS === */
+  --btn-primary-bg: linear-gradient(135deg, #d61a4d 0%, #e63462 100%);
+  --btn-primary-hover: linear-gradient(135deg, #a01538 0%, #d61a4d 100%);
+  --btn-secondary-bg: rgba(107, 61, 122, 0.15);
+  --btn-secondary-hover: rgba(107, 61, 122, 0.25);
+
+  /* === STATUS === */
+  --status-online: #ff4d8a;
+  --status-offline: #d61a4d;
+  --typing-dot: #d61a4d;
+}
+
+/* ============================================
+   ✨ EFFETS SPÉCIAUX POUR CHARLY
+   ============================================ */
+
+:root {
+  /* Glow effects */
+  --glow-primary: 0 0 20px rgba(255, 77, 138, 0.5);
+  --glow-strong: 0 0 40px rgba(214, 26, 77, 0.8);
+  --glow-text: 0 0 10px rgba(255, 77, 138, 0.8);
+
+  /* Néon text shadow */
+  --neon-text: 
+    0 0 10px rgba(255, 77, 138, 1),
+    0 0 20px rgba(214, 26, 77, 0.8),
+    0 0 30px rgba(214, 26, 77, 0.6);
+
+  /* Gradients spéciaux */
+  --gradient-royal: linear-gradient(
+    135deg,
+    #4a2a5e 0%,
+    #d61a4d 50%,
+    #ff4d8a 100%
+  );
+
+  --gradient-glow: linear-gradient(
+    135deg,
+    #d61a4d 0%,
+    #ff4d8a 100%
+  );
 }
 /* ============================================
    TRANSITIONS DOUCES ENTRE THÈMES
@@ -356,7 +430,7 @@ body {
   transition: none !important;
   opacity: 0.85;
   transform: scale(1.05);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  /* box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4); */
 }
 
 .robot-icon {
@@ -445,7 +519,7 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   flex: 1;
   min-height: 40px;
   -webkit-app-region: drag;
@@ -521,7 +595,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-width: 120px;
+  max-width: 150px;
   -webkit-app-region: no-drag;
 }
 
@@ -2827,10 +2901,10 @@ kbd {
    ============================================ */
 
 #floatingButton {
-  border-radius: 50%;
+  /* border-radius: 50%;
   background: var(--btn-primary-bg);
-  border: 3px solid var(--border-color);
-  box-shadow: var(--shadow-large);
+  border: 3px solid var(--border-color); */
+  /* box-shadow: var(--shadow-large); */
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -2841,8 +2915,8 @@ kbd {
 }
 
 #floatingButton:hover {
-  transform: scale(1.05) translateY(-5px);
-  box-shadow: 0 12px 40px rgba(63, 114, 175, 0.4);
+  transform: scale(1.30) translateY(-5px);
+  /* box-shadow: 0 12px 40px rgba(63, 114, 175, 0.4); */
 }
 
 #floatingButton:active {
@@ -2948,10 +3022,10 @@ kbd {
   position: fixed;
   right: 20px;
   bottom: 20px;
-  border-radius: 50%;
+  /* border-radius: 50%;
   background: var(--btn-primary-bg);
   border: 3px solid var(--border-color);
-  box-shadow: var(--shadow-large);
+  box-shadow: var(--shadow-large); */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2962,12 +3036,12 @@ kbd {
 }
 
 #floatingButton .lottie-container {
-    animation: breathe-glow 3s ease-in-out infinite;
+  animation: breathe-glow 3s ease-in-out infinite;
 }
 
 #floatingButton:hover {
-  transform: scale(1.05) translateY(-5px);
-  box-shadow: 0 12px 40px rgba(63, 114, 175, 0.4);
+  transform: scale(1.30) translateY(-5px);
+  /* box-shadow: 0 12px 40px rgba(63, 114, 175, 0.4); */
   animation-play-state: paused;
 }
 

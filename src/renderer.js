@@ -80,174 +80,401 @@ function scrollToBottom() {
 // 🆕 GESTIONNAIRE D'ANIMATIONS CENTRALISÉ
 // ============================================
 
-const AnimationManager = {
+
+const CharlyAnimationManager = {
     current: null,
     currentHeader: null,
     currentState: 'idle',
     idleTimer: null,
+    sequenceTimer: null,
+    isPlayingSequence: false,
+    microMovementTimer: null,
 
+    // 🎭 Séquences d'animations pour Charly
+    sequences: {
+        // Mode repos - Alternance naturelle
+        idle: [
+            { animation: 'cat-devil', duration: 5000 },
+            { animation: 'star-struck', duration: 2000 },
+            { animation: 'squinting-cat', duration: 2000 }
+        ],
+
+        // Salutation à l'impératrice 👑
+        greeting: [
+            { animation: 'cat-devil', duration: 5000 },
+            { animation: 'squinting-cat', duration: 5000 }
+        ],
+
+        // En train de réfléchir
+        thinking: [
+            { animation: 'pleading-cat', duration: 2000 },
+            { animation: 'cat-ok', duration: 800 },
+            { animation: 'pleading-cat', duration: 1500 },
+            { animation: 'cat-ok', duration: 800 }
+        ],
+
+        // En train de traiter
+        processing: [
+            { animation: 'cat-beaming', duration: 1500 },
+            { animation: 'cat-ok', duration: 800 },
+            { animation: 'cat-beaming', duration: 1500 }
+        ],
+
+        // En train de parler/répondre
+        chatting: [
+            { animation: 'cat-ok', duration: 3000 },
+            { animation: 'cat-beaming', duration: 2000 },
+            { animation: 'cat-ok', duration: 2500 }
+        ],
+
+        // Heureux (mission réussie)
+        happy: [
+            { animation: 'cat-sun', duration: 2000 },
+            { animation: 'cat-rainbow', duration: 2000 },
+            { animation: 'cat-beaming', duration: 2000 },
+            { animation: 'cat-ok', duration: 1500 }
+        ],
+
+        // Confus (demande clarification)
+        confused: [
+            { animation: 'squinting-cat', duration: 2000 },
+            { animation: 'pleading-cat', duration: 1500 },
+            { animation: 'cat-ok', duration: 1500 }
+        ],
+
+        // Erreur (s'excuse auprès de l'impératrice)
+        error: [
+            { animation: 'cat-crying', duration: 2500 },
+            { animation: 'pleading-cat', duration: 2000 },
+            { animation: 'cat-ok', duration: 1500 }
+        ],
+
+        // Idée/suggestion
+        idea: [
+            { animation: 'cat-rainbow', duration: 2000 },
+            { animation: 'cat-beaming', duration: 1500 },
+            { animation: 'cat-ok', duration: 2000 }
+        ],
+
+        // Affectueux/admiratif
+        loving: [
+            { animation: 'star-struck', duration: 2000 },
+            { animation: 'cat-eyes', duration: 1800 },
+            { animation: 'cat-sun', duration: 1500 },
+            { animation: 'cat-ok', duration: 1500 }
+        ]
+    },
+
+    // États simples (fallback)
     states: {
-        IDLE: 'robot-chatting',
-        GREETING: 'robot-hi',
-        THINKING: 'robot-thinking',
-        PROCESSING: 'robot-processing',
-        CHATTING: 'robot-chatting',
-        HAPPY: 'robot-happy',
-        CONFUSED: 'robot-confused',
-        ERROR: 'robot-error',
-        IDEA: 'robot-idea',
-        LOVING: 'robot-loving',
-        LOADING: 'robot-loading'
+        IDLE: 'cat-ok',
+        GREETING: 'cat-rainbow',
+        THINKING: 'pleading-cat',
+        PROCESSING: 'cat-beaming',
+        CHATTING: 'cat-ok',
+        HAPPY: 'cat-sun',
+        CONFUSED: 'squinting-cat',
+        ERROR: 'cat-crying',
+        IDEA: 'cat-rainbow',
+        LOVING: 'cat-eyes',
+        LOADING: 'star-struck'
     },
 
     // Détection de sentiment dans les réponses
     detectSentiment(text) {
         const lowerText = text.toLowerCase();
 
-        // Mots-clés pour chaque émotion (ordre d'importance)
         const patterns = {
-            error: ['erreur', 'impossible', 'échec', 'problème', 'désolé', 'malheureusement'],
-            confused: ['pourriez-vous préciser', 'je ne comprends pas', 'pouvez-vous clarifier', 'ambig'],
-            loving: ['merci', 'avec plaisir', 'ravi', 'content de', 'heureux de'],
-            happy: ['excellent', 'parfait', 'super', 'bravo', 'réussi', 'génial', 'formidable'],
-            idea: ['voici', 'proposition', 'suggestion', 'solution', 'je propose', 'recommandation']
+            error: ['erreur', 'impossible', 'échec', 'problème', 'désolé', 'malheureusement', 'excuses'],
+            confused: ['pourriez-vous préciser', 'je ne comprends pas', 'pouvez-vous clarifier', 'ambig', 'confus'],
+            loving: ['impératrice', 'majesté', 'seigneurie', 'altesse', 'merci', 'avec plaisir', 'ravi'],
+            happy: ['excellent', 'parfait', 'super', 'bravo', 'réussi', 'génial', 'formidable', 'mission accomplie'],
+            idea: ['voici', 'proposition', 'suggestion', 'solution', 'je propose', 'recommandation', 'idée']
         };
 
-        // Vérifier dans l'ordre de priorité
         for (const [emotion, keywords] of Object.entries(patterns)) {
             if (keywords.some(keyword => lowerText.includes(keyword))) {
                 return emotion;
             }
         }
 
-        return 'chatting'; // Par défaut
+        return 'chatting';
     },
 
-    // Changer l'animation avec transition fluide (synchronisé bouton + header)
-    changeAnimation(state, duration = null) {
+    // 🎬 Lancer une séquence d'animations
+    playSequence(sequenceName) {
+        const sequence = this.sequences[sequenceName];
+        if (!sequence) {
+            console.warn(`🎭 Séquence ${sequenceName} introuvable`);
+            this.changeAnimationDirect(this.states[sequenceName.toUpperCase()] || 'cat-ok');
+            return;
+        }
+
+        console.log(`🎬 Démarrage séquence: ${sequenceName}`);
+
+        this.stopSequence();
+        this.isPlayingSequence = true;
+        this.currentState = sequenceName;
+        let index = 0;
+
+        const playNext = () => {
+            if (!this.isPlayingSequence) return;
+
+            const step = sequence[index];
+            if (!step) {
+                // Fin de la séquence, recommencer en boucle
+                index = 0;
+                setTimeout(playNext, 500);
+                return;
+            }
+
+            // Changer l'animation
+            this.changeAnimationDirect(step.animation);
+
+            // Programmer la suivante
+            this.sequenceTimer = setTimeout(() => {
+                index++;
+                if (index >= sequence.length) {
+                    index = 0; // Boucler
+                }
+                playNext();
+            }, step.duration);
+        };
+
+        playNext();
+    },
+
+    // 🛑 Arrêter la séquence
+    stopSequence() {
+        this.isPlayingSequence = false;
+        if (this.sequenceTimer) {
+            clearTimeout(this.sequenceTimer);
+            this.sequenceTimer = null;
+        }
+    },
+
+    // 🎨 Changement d'animation direct (sans fade, pour les séquences)
+
+    changeAnimationDirect(animationName) {
+        const animationPath = `./animations/${animationName}.json`;
+        const container = document.getElementById('lottie-container');
+        const headerContainer = document.getElementById('lottie-header');
+
+        // Détruire les anciennes
+        if (this.current) {
+            this.current.destroy();
+            this.current = null;
+        }
+        if (this.currentHeader) {
+            this.currentHeader.destroy();
+            this.currentHeader = null;
+        }
+
+        try {
+            if (container) {
+                this.current = window.lottie.loadAnimation({
+                    container: container,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: animationPath
+                });
+            }
+
+            if (headerContainer) {
+                this.currentHeader = window.lottie.loadAnimation({
+                    container: headerContainer,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: animationPath
+                });
+            }
+
+            console.log(`✅ Animation initialisée: ${animationName}`);
+        } catch (error) {
+            console.error('❌ Erreur chargement animation:', error);
+        }
+    },
+
+    // Changement avec fade (pour les changements d'état majeurs)
+    changeAnimationWithFade(state, duration = null) {
         const animationFile = this.states[state.toUpperCase()] || state;
         const animationPath = `./animations/${animationFile}.json`;
 
-        console.log(`🎭 Animation synchronisée: ${state} (${animationFile})`);
+        console.log(`🎭 Animation avec fade: ${state}`);
 
         const container = document.getElementById('lottie-container');
         const headerContainer = document.getElementById('lottie-header');
 
-        // Phase 1 : Fade out des DEUX animations
+        // Fade out
         if (container) container.classList.add('fading-out');
         if (headerContainer) headerContainer.classList.add('fading-out');
 
         setTimeout(() => {
-            // Phase 2 : Détruire les anciennes animations
-            if (this.current) {
-                this.current.destroy();
+            this.stopSequence();
+            this.changeAnimationDirect(animationFile);
+
+            // Fade in
+            if (container) {
+                container.classList.remove('fading-out');
+                container.classList.add('fading-in');
             }
-            if (this.currentHeader) {
-                this.currentHeader.destroy();
+            if (headerContainer) {
+                headerContainer.classList.remove('fading-out');
+                headerContainer.classList.add('fading-in');
             }
 
-            try {
-                // Phase 3 : Charger les nouvelles animations (SYNCHRONISÉES)
+            setTimeout(() => {
+                if (container) container.classList.remove('fading-in');
+                if (headerContainer) headerContainer.classList.remove('fading-in');
+            }, 200);
 
-                // Animation du bouton flottant
-                if (container) {
-                    this.current = window.lottie.loadAnimation({
-                        container: container,
-                        renderer: 'svg',
-                        loop: true,
-                        autoplay: true,
-                        path: animationPath
-                    });
-                }
-
-                // Animation du header (même animation)
-                if (headerContainer) {
-                    this.currentHeader = window.lottie.loadAnimation({
-                        container: headerContainer,
-                        renderer: 'svg',
-                        loop: true,
-                        autoplay: true,
-                        path: animationPath
-                    });
-                }
-
-                this.currentState = state;
-
-                // Phase 4 : Fade in des DEUX animations
-                if (container) {
-                    container.classList.remove('fading-out');
-                    container.classList.add('fading-in');
-                }
-                if (headerContainer) {
-                    headerContainer.classList.remove('fading-out');
-                    headerContainer.classList.add('fading-in');
-                }
-
+            if (duration) {
                 setTimeout(() => {
-                    if (container) container.classList.remove('fading-in');
-                    if (headerContainer) headerContainer.classList.remove('fading-in');
-                }, 200);
-
-                // Si durée spécifiée, revenir à idle après
-                if (duration) {
-                    setTimeout(() => {
-                        this.toIdle();
-                    }, duration);
-                }
-
-                // Reset le timer idle
-                this.resetIdleTimer();
-
-            } catch (error) {
-                console.error('❌ Erreur chargement animation:', error);
-                if (container) container.classList.remove('fading-out');
-                if (headerContainer) headerContainer.classList.remove('fading-out');
+                    this.toIdle();
+                }, duration);
             }
-        }, 200); // Durée du fade out
+
+            this.resetIdleTimer();
+        }, 200);
     },
 
-    // Passer en mode idle
+    // 😴 Passer en mode idle
     toIdle() {
         if (this.currentState !== 'idle') {
-            this.changeAnimation('idle');
+            this.stopSequence();
+            this.playSequence('idle');
         }
     },
 
-    // Reset le timer idle (30 secondes)
+    // ⏰ Reset le timer idle
     resetIdleTimer() {
         if (this.idleTimer) {
             clearTimeout(this.idleTimer);
         }
 
         this.idleTimer = setTimeout(() => {
-            this.toIdle();
+            if (this.currentState !== 'idle') {
+                this.toIdle();
+            }
         }, 30000); // 30 secondes
     },
 
-    // Animation de salutation
+    // 👋 Animation de salutation
     greet() {
-        this.changeAnimation('greeting', 2000);
+        this.stopSequence();
+        this.playSequence('greeting');
+
+        // Retour à idle après la séquence
+        setTimeout(() => {
+            this.toIdle();
+        }, 7000); // Durée totale de la séquence greeting
     },
 
-    // Animation de réflexion
+    // 🤔 Animation de réflexion
     think() {
-        this.changeAnimation('thinking');
+        this.stopSequence();
+        this.playSequence('thinking');
     },
 
-    // Animation de traitement
+    // ⚙️ Animation de traitement
     process() {
-        this.changeAnimation('processing');
+        this.stopSequence();
+        this.playSequence('processing');
     },
 
-    // Animation basée sur le sentiment
+    // 💬 Animation de réponse basée sur le sentiment
     respondWith(text) {
         const sentiment = this.detectSentiment(text);
-        this.changeAnimation(sentiment);
+        this.stopSequence();
+        this.playSequence(sentiment);
+
+        // Retour progressif à idle
+        setTimeout(() => {
+            this.toIdle();
+        }, 10000);
+    },
+
+    // 🎲 Système de micro-mouvements naturels
+    startNaturalBehavior() {
+        console.log('🎲 Comportement naturel activé');
+
+        this.microMovementTimer = setInterval(() => {
+            // Seulement en mode idle
+            if (this.currentState === 'idle' && !this.isPlayingSequence) {
+                // 20% de chance de faire un micro-mouvement
+                if (Math.random() > 0.8) {
+                    const microMoves = [
+                        'cat-beaming',
+                        'cat-sun',
+                        'cat-ok'
+                    ];
+
+                    const randomMove = microMoves[Math.floor(Math.random() * microMoves.length)];
+
+                    this.changeAnimationDirect(randomMove);
+
+                    // Retour après 1-2 secondes
+                    setTimeout(() => {
+                        if (this.currentState === 'idle') {
+                            this.changeAnimationDirect('cat-ok');
+                        }
+                    }, 1000 + Math.random() * 1000);
+                }
+            }
+        }, 8000); // Vérifie toutes les 8 secondes
+    },
+
+    // 🛑 Arrêter le comportement naturel
+    stopNaturalBehavior() {
+        if (this.microMovementTimer) {
+            clearInterval(this.microMovementTimer);
+            this.microMovementTimer = null;
+        }
+    },
+
+    // 🎯 Initialisation
+    init() {
+        console.log('🐱 CharlyAnimationManager initialisé');
+
+        // Démarrer avec greeting
+        setTimeout(() => {
+            this.greet();
+        }, 500);
+
+        // Activer les micro-mouvements après 5 secondes
+        setTimeout(() => {
+            this.startNaturalBehavior();
+        }, 5000);
+    },
+
+    // 🧹 Nettoyage
+    destroy() {
+        this.stopSequence();
+        this.stopNaturalBehavior();
+        if (this.idleTimer) clearTimeout(this.idleTimer);
+        if (this.current) this.current.destroy();
+        if (this.currentHeader) this.currentHeader.destroy();
     }
 };
 
-// Exposer pour debug
-window.AnimationManager = AnimationManager;
+// 🎬 Initialisation automatique
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.lottie) {
+            CharlyAnimationManager.init();
+        } else {
+            console.error('❌ Lottie non chargé');
+        }
+    }, 1000);
+});
+
+// 📤 Exposer globalement
+window.CharlyAnimationManager = CharlyAnimationManager;
+window.AnimationManager = CharlyAnimationManager; // Alias pour compatibilité
+
+console.log('🐱 Charly Animation Manager chargé');
 
 // ============================================
 // AUTHENTIFICATION SIMPLIFIÉE
@@ -428,8 +655,7 @@ function initLottieAnimation() {
             return;
         }
 
-        // 🆕 Utiliser AnimationManager pour la première animation
-        AnimationManager.changeAnimation('greeting', 2000);
+        CharlyAnimationManager.greet();
 
         console.log('✅ Animation assistant chargée via AnimationManager');
 
@@ -1048,7 +1274,7 @@ async function sendMessage() {
     if (!message) return;
 
     if (message.length < 2) {
-        addMessage("Pourriez-vous préciser votre demande ?", 'bot');
+        addMessage("Pourriez-vous préciser votre demande, Votre Majesté ?", 'bot');
         // 🆕 Animation de confusion
         AnimationManager.changeAnimation('confused', 3000);
         return;
@@ -1279,7 +1505,7 @@ function addMessage(text, type) {
     if (type === 'bot') {
         const header = document.createElement('div');
         header.className = 'message-header';
-        header.textContent = 'Assistant Pro';
+        header.textContent = 'Charly';
         contentDiv.appendChild(header);
     }
 
@@ -1406,9 +1632,9 @@ function restoreMessagesUI() {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
     contentDiv.innerHTML = `
-        <div class="message-header">Assistant Pro</div>
-        <p>Bon retour ! Je me souviens de notre conversation précédente. Souhaitez-vous continuer ?</p>
-    `;
+    <div class="message-header">Charly</div>
+    <p>Bon retour, Impératrice Persephone ! 👑 Je me souviens de notre conversation précédente. Souhaitez-vous continuer ?</p>
+`;
     welcomeBack.appendChild(contentDiv);
     elements.messagesContainer.appendChild(welcomeBack);
 
@@ -1424,7 +1650,7 @@ function restoreMessagesUI() {
         } else if (msg.role === 'assistant') {
             addMessage(msg.content, 'bot');
         }
-        
+
         // 🆕 Ajouter des timestamps échelonnés
         if (window.UIPolish && window.UIPolish.TimestampManager) {
             const messages = document.querySelectorAll('.message');
@@ -1579,7 +1805,7 @@ function setupKeyboardShortcuts() {
                 }, 100);
 
                 setTimeout(() => {
-                    addMessage('Nouvelle conversation démarrée. Comment puis-je vous aider ?', 'bot');
+                    addMessage('Nouvelle conversation démarrée, Votre Majesté. Comment puis-je vous servir ?', 'bot');
                     showToast('Nouvelle conversation', 'success');
                     // 🆕 Animation de nouvelle conversation
                     AnimationManager.greet();
@@ -1769,7 +1995,7 @@ window.assistantAuth = {
 // 🆕 Exposer sendMessage pour VoiceManager
 window.sendMessage = sendMessage;
 
-console.log('💼 Assistant Pro chargé avec AnimationManager !');
+console.log('🐱 Charly chargé et prêt à servir l\'Impératrice ! 👑');
 console.log('🎭 Animations contextuelles activées');
 console.log('🤖 Animations synchronisées (bouton + header)');
 console.log('📐 Robot header agrandi: 100x100px');
