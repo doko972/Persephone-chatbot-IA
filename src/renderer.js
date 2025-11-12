@@ -900,6 +900,19 @@ function setupCloseButton() {
 }
 
 function setupEventListeners() {
+    const historyBtn = document.getElementById('historyBtn');
+    if (historyBtn) {
+        historyBtn.addEventListener('click', () => {
+            toggleHistoryPanel();
+        });
+    }
+    const closeHistoryBtn = document.getElementById('closeHistory');
+    if (closeHistoryBtn) {
+        closeHistoryBtn.addEventListener('click', () => {
+            toggleHistoryPanel();
+        });
+    }
+
     if (elements.floatingButton) {
         let isDragging = false;
         let canDrag = false;
@@ -945,6 +958,7 @@ function setupEventListeners() {
                 floatingBtn.style.bottom = 'auto';
             }
         };
+
 
         // MouseUp : Clic ou fin de drag
         const handleMouseUp = (e) => {
@@ -1152,6 +1166,56 @@ function setupEventListeners() {
 
     console.log('✅ Event listeners configurés');
 }
+// ============================================
+// TOGGLE PANNEAU HISTORIQUE
+// ============================================
+
+function toggleHistoryPanel() {
+    const historyPanel = document.getElementById('historyPanel');
+    const settingsPanel = document.getElementById('settingsPanel');
+
+    if (!historyPanel) {
+        console.error('❌ Panneau historique non trouvé');
+        return;
+    }
+
+    const isActive = historyPanel.classList.contains('active');
+
+    if (isActive) {
+        // Fermer l'historique
+        historyPanel.classList.remove('active');
+        console.log('📚 Historique fermé');
+    } else {
+        // Ouvrir l'historique
+
+        // Fermer settings si ouvert
+        if (settingsPanel) {
+            settingsPanel.classList.remove('active');
+        }
+
+        historyPanel.classList.add('active');
+        console.log('📚 Historique ouvert');
+
+        // Charger l'historique si authentifié
+        if (window.ConversationHistoryManager && window.assistantAuth?.isAuthenticated()) {
+            window.ConversationHistoryManager.loadConversations();
+        } else {
+            // Afficher message de connexion requise
+            const historyContent = document.getElementById('historyContent');
+            if (historyContent) {
+                historyContent.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-lock"></i>
+                        <p>Connectez-vous pour accéder à l'historique</p>
+                    </div>
+                `;
+            }
+        }
+    }
+}
+
+// Exposer globalement
+window.toggleHistoryPanel = toggleHistoryPanel;
 
 // ============================================
 // RESTAURER LA POSITION DU BOUTON FLOTTANT

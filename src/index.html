@@ -39,6 +39,15 @@
 
         <!-- Boutons du header -->
         <div class="header-actions">
+          <!-- 🆕 BOUTON HISTORIQUE -->
+          <button
+            class="icon-btn"
+            id="historyBtn"
+            title="Historique des conversations"
+          >
+            <i class="fas fa-history"></i>
+          </button>
+
           <button class="icon-btn" id="settingsBtn" title="Paramètres">
             <i class="fas fa-cog"></i>
           </button>
@@ -70,8 +79,9 @@
           <div class="message-content">
             <div class="message-header">Charly, à votre service</div>
             <p>
-              Bienvenue, Impératrice Persephone ! 👑✨<br>
-              Je suis Charly, votre assistant dévoué. Comment puis-je vous être utile aujourd'hui, Votre Majesté ?
+              Bienvenue, Impératrice Persephone ! 👑✨<br />
+              Je suis Charly, votre assistant dévoué. Comment puis-je vous être
+              utile aujourd'hui, Votre Majesté ?
             </p>
           </div>
         </div>
@@ -245,6 +255,50 @@
         </div>
 
         <div id="connectionStatus" class="connection-status"></div>
+      </div>
+    </div>
+        <!-- 🆕 PANNEAU D'HISTORIQUE -->
+    <div id="historyPanel" class="history-panel">
+      <div class="history-header">
+        <h3><i class="fas fa-history"></i> Historique</h3>
+        <div class="history-header-actions">
+          <button id="refreshHistory" class="icon-btn" title="Actualiser">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <button id="closeHistory" class="close-history">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="history-search">
+        <i class="fas fa-search history-search-icon"></i>
+        <input 
+          type="text" 
+          class="history-search-input" 
+          id="historySearchInput" 
+          placeholder="Rechercher dans l'historique..."
+        />
+      </div>
+
+      <div class="history-filters">
+        <div class="filter-chip active" data-filter="all">
+          <i class="fas fa-list"></i> Toutes
+        </div>
+        <div class="filter-chip" data-filter="today">
+          <i class="fas fa-clock"></i> Aujourd'hui
+        </div>
+        <div class="filter-chip" data-filter="week">
+          <i class="fas fa-calendar-week"></i> Cette semaine
+        </div>
+      </div>
+
+      <div class="history-content" id="historyContent">
+        <!-- Conversations chargées ici dynamiquement -->
+        <div class="loading-state">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Chargement de l'historique...</p>
+        </div>
       </div>
     </div>
 
