@@ -23,11 +23,11 @@ pub fn run() {
                         let screen_height = screen_size.height as f64;
                         
                         let widget_width = 400.0;
-                        let widget_height = 500.0;
+                        let widget_height = 400.0;
                         
                         // Position : 95% droite (coin bas-droit), 90% bas
-                        let x = (screen_width * 0.95) - widget_width;
-                        let y = (screen_height * 0.80) - widget_height;
+                        let x = (screen_width * 0.85) - widget_width;
+                        let y = (screen_height * 0.75) - widget_height;
                         
                         // Positionner la fenêtre (desktop uniquement)
                         #[cfg(not(target_os = "android"))]

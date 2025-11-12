@@ -4,17 +4,17 @@
 
 :root {
   /* === COULEURS PRINCIPALES === */
-  --primary-color: #d61a4d;              /* Rouge sang */
-  --secondary-color: #4a2a5e;            /* Pourpre moyen */
-  --accent-color: #ff4d8a;               /* Lueur rose */
-  --text-color: #ffffff;                 /* Texte principal */
-  --text-color-w: #ffffff;               /* Texte blanc */
-  --light-text: #c74d7e;                 /* Texte rose clair */
-  --background-color: #140a1f;           /* Noir pourpre */
-  --dark-background: #0d0515;            /* Vide obscur */
-  --success-color: #ff4d8a;              /* Success rose */
-  --error-color: #d61a4d;                /* Erreur rouge */
-  --warning-color: #e63462;              /* Warning cramoisi */
+  --primary-color: #d61a4d;
+  --secondary-color: #4a2a5e;
+  --accent-color: #ff4d8a;
+  --text-color: #ffffff;
+  --text-color-w: #ffffff;
+  --light-text: #c74d7e;
+  --background-color: #140a1f;
+  --dark-background: #0d0515;
+  --success-color: #ff4d8a;
+  --error-color: #d61a4d;
+  --warning-color: #e63462;
 
   /* === BACKGROUNDS === */
   --bg-main: linear-gradient(135deg, #140a1f 0%, #2a1a3d 100%);
@@ -728,13 +728,13 @@ body {
 
 /* Messages bot avec effet glassmorphism */
 .bot-message .message-content p {
-  background: var(--msg-bot-bg);
+  background: var(--bg-header);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--msg-bot-border);
   padding: 12px 16px;
   border-radius: 18px 18px 18px 4px;
-  color: var(--msg-bot-text);
+  color: var(--msg-user-text);
   line-height: 1.5;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin: 0;
@@ -778,6 +778,7 @@ body {
   gap: 12px;
   padding: 0 20px 16px;
   background: transparent;
+  color: var(--msg-bot-text);
 }
 
 .typing-indicator.active {
@@ -2761,7 +2762,7 @@ kbd {
 }
 
 .user-message .message-content {
-  background: var(--msg-user-bg);
+  /* background: var(--msg-user-bg); */
   color: var(--msg-user-text);
   padding: 10px 14px;
   border-radius: 12px 12px 4px 12px;
@@ -2793,7 +2794,7 @@ kbd {
   margin: 8px 0 0 0;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--msg-bot-text);
+  color: #ffffff;
 }
 
 .bot-message .message-content p:first-of-type {
