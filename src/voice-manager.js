@@ -5,44 +5,34 @@ const VoiceManager = {
     silenceTimer: null,
     activationMode: 'click', // 'click', 'auto', 'push'
     isPushKeyDown: false,
-    pushKey: null, // 🆕 Mémoriser quelle touche est utilisée
+    pushKey: null,
     autoModeActive: false,
-    isMutedForTTS: false, // 🆕 Flag pour bloquer le micro pendant TTS
+    isMutedForTTS: false,
     
     // Initialisation
     init() {
         console.log('🎤 Initialisation du mode vocal...');
         
-        // Charger les préférences
         this.loadSettings();
         
-        // Vérifier le support
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
             console.error('❌ Web Speech API non supportée');
             return false;
         }
         
-        // Créer l'instance
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         this.recognition = new SpeechRecognition();
         
-        // Configuration
         this.recognition.lang = 'fr-FR';
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
         
-        // Events
         this.setupEvents();
-        
-        // Interface
         this.createVoiceButton();
         this.createVoiceIndicator();
         this.createModeSelector();
-        
-        // Raccourcis clavier
         this.setupKeyboardShortcuts();
         
-        // Si mode auto, démarrer
         if (this.activationMode === 'auto') {
             setTimeout(() => this.startAutoMode(), 1000);
         }
@@ -51,7 +41,6 @@ const VoiceManager = {
         return true;
     },
     
-    // Charger les paramètres
     loadSettings() {
         const savedMode = localStorage.getItem('voice_activation_mode');
         if (savedMode) {
@@ -59,15 +48,12 @@ const VoiceManager = {
         }
     },
     
-    // Sauvegarder les paramètres
     saveSettings() {
         localStorage.setItem('voice_activation_mode', this.activationMode);
     },
     
-    // Configuration des événements
     setupEvents() {
         this.recognition.onstart = () => {
-            // 🛡️ PROTECTION ULTIME : Si le TTS est actif, arrêter immédiatement
             if (this.isMutedForTTS || (window.TTSManager && TTSManager.isSpeaking)) {
                 console.log('🚨 Écoute démarrée pendant TTS - ARRÊT IMMÉDIAT');
                 try {
@@ -84,10 +70,8 @@ const VoiceManager = {
         };
         
         this.recognition.onresult = (event) => {
-            // 🛡️ PROTECTION : Ignorer si le TTS est en cours
             if (this.isMutedForTTS || (window.TTSManager && TTSManager.isSpeaking)) {
                 console.log('🔇 Parole ignorée (TTS actif)');
-                // 🗑️ Vider la transcription
                 this.transcript = '';
                 return;
             }
@@ -107,14 +91,12 @@ const VoiceManager = {
             
             this.transcript = finalTranscript || interimTranscript;
             
-            // 🛡️ Ignorer les transcriptions trop courtes (écho)
             if (this.transcript.trim().length < 5) {
                 console.log('🔇 Transcription ignorée (trop courte):', this.transcript);
-                this.transcript = ''; // 🗑️ Vider aussi
+                this.transcript = '';
                 return;
             }
 
-            // 🛡️ Ignorer les phrases communes du chatbot (patterns)
             const botPhrases = [
                 'comment puis-je',
                 'si vous avez',
@@ -144,7 +126,6 @@ const VoiceManager = {
             this.isListening = false;
             this.updateUI();
             
-            // 🔄 En mode auto, redémarrer SAUF si en pause TTS
             if (this.activationMode === 'auto' && this.autoModeActive && !this.isMutedForTTS) {
                 setTimeout(() => this.start(), 100);
             } else if (this.transcript && this.transcript.length > 3 && !this.isMutedForTTS) {
@@ -155,7 +136,6 @@ const VoiceManager = {
         this.recognition.onerror = (event) => {
             console.error('❌ Erreur:', event.error);
             
-            // En mode auto, redémarrer sauf si permission refusée OU en pause TTS
             if (event.error !== 'not-allowed' && 
                 this.activationMode === 'auto' && 
                 this.autoModeActive &&
@@ -168,31 +148,23 @@ const VoiceManager = {
         };
     },
 
-    // 🆕 MÉTHODE POUR COUPER LE MICRO (appelée par TTS)
     muteForTTS() {
         console.log('🔇 Micro mis en pause pour TTS');
         this.isMutedForTTS = true;
-        
-        // 🗑️ VIDER la transcription en cours (éviter qu'elle soit renvoyée)
         this.transcript = '';
         
-        // Vider aussi l'input
         const input = document.getElementById('messageInput');
         if (input && input.value.trim().length > 0) {
-            // Ne vider que si c'est une transcription vocale (pas du texte tapé manuellement)
-            // On peut détecter ça si le micro était actif
             if (this.isListening) {
                 input.value = '';
             }
         }
         
-        // Arrêter le timer de silence
         if (this.silenceTimer) {
             clearTimeout(this.silenceTimer);
             this.silenceTimer = null;
         }
         
-        // Arrêter l'écoute en cours
         if (this.isListening) {
             try {
                 this.recognition.stop();
@@ -202,27 +174,21 @@ const VoiceManager = {
         }
     },
 
-    // 🆕 MÉTHODE POUR RÉACTIVER LE MICRO (appelée par TTS)
     unmuteForTTS() {
         console.log('🎤 Micro déverrouillé après TTS');
         this.isMutedForTTS = false;
-        
-        // 🗑️ S'assurer que la transcription est vide
         this.transcript = '';
         
-        // Redémarrer si mode auto actif (avec délai plus long)
         if (this.activationMode === 'auto' && this.autoModeActive) {
             setTimeout(() => {
-                // Triple vérification avant de redémarrer
                 if (!this.isMutedForTTS && !TTSManager.isSpeaking && this.autoModeActive) {
                     console.log('🎤 Redémarrage du micro après vérifications');
                     this.start();
                 }
-            }, 500); // 🆕 Augmenté à 500ms
+            }, 500);
         }
     },
     
-    // Créer le bouton
     createVoiceButton() {
         const voiceBtn = document.getElementById('voiceButton');
         
@@ -233,7 +199,6 @@ const VoiceManager = {
         
         console.log('✅ Bouton vocal trouvé');
         
-        // Event selon le mode
         voiceBtn.addEventListener('click', () => {
             if (this.activationMode === 'click') {
                 this.toggle();
@@ -245,7 +210,6 @@ const VoiceManager = {
         console.log('✅ Bouton vocal attaché');
     },
     
-    // Créer l'indicateur
     createVoiceIndicator() {
         const inputContainer = document.querySelector('.message-input-container');
         if (!inputContainer) return;
@@ -259,7 +223,6 @@ const VoiceManager = {
         inputContainer.appendChild(indicator);
     },
     
-    // Créer le sélecteur de mode
     createModeSelector() {
         const settingsPanel = document.getElementById('settingsPanel');
         if (!settingsPanel) return;
@@ -267,7 +230,6 @@ const VoiceManager = {
         const settingsContent = settingsPanel.querySelector('.settings-content');
         if (!settingsContent) return;
         
-        // Vérifier si déjà présent
         if (document.getElementById('voiceModeSection')) return;
         
         const modeSection = document.createElement('div');
@@ -297,7 +259,6 @@ const VoiceManager = {
             </div>
         `;
         
-        // Insérer avant la section TTS si elle existe
         const ttsSection = settingsContent.querySelector('.tts-settings-section');
         if (ttsSection) {
             settingsContent.insertBefore(modeSection, ttsSection);
@@ -305,7 +266,6 @@ const VoiceManager = {
             settingsContent.appendChild(modeSection);
         }
         
-        // Events
         const radios = modeSection.querySelectorAll('input[name="voiceMode"]');
         radios.forEach(radio => {
             radio.addEventListener('change', (e) => {
@@ -316,21 +276,17 @@ const VoiceManager = {
         console.log('✅ Sélecteur de mode créé');
     },
     
-    // Changer de mode
     changeMode(mode) {
         console.log('🔄 Changement mode:', this.activationMode, '→', mode);
         
-        // Arrêter l'ancien mode
         if (this.activationMode === 'auto') {
             this.stopAutoMode();
         }
         this.stop();
         
-        // Changer le mode
         this.activationMode = mode;
         this.saveSettings();
         
-        // Démarrer le nouveau mode
         if (mode === 'auto') {
             this.startAutoMode();
         }
@@ -348,7 +304,6 @@ const VoiceManager = {
         }
     },
     
-    // Mode automatique
     startAutoMode() {
         console.log('🔄 Démarrage mode auto');
         this.autoModeActive = true;
@@ -369,29 +324,25 @@ const VoiceManager = {
         }
     },
     
-    // Raccourcis clavier
     setupKeyboardShortcuts() {
         let pushToTalkKeys = ['ControlLeft', 'ControlRight', 'AltLeft', 'AltRight'];
         
         document.addEventListener('keydown', (e) => {
-            // Push-to-talk : Ctrl ou Alt uniquement (pas d'Espace)
             if (pushToTalkKeys.includes(e.code) && this.activationMode === 'push') {
                 e.preventDefault();
                 
                 if (!this.isPushKeyDown) {
                     console.log('🎤 Push-to-talk activé avec:', e.code);
                     this.isPushKeyDown = true;
-                    this.pushKey = e.code; // Mémoriser quelle touche
+                    this.pushKey = e.code;
                     this.start();
                     
-                    // Feedback visuel
                     if (window.showToast) {
                         window.showToast('🎤 Parlez maintenant...', 'info', 1000);
                     }
                 }
             }
             
-            // 🆕 Raccourci global : Ctrl+Shift+M pour toggle le micro (tous modes)
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyM') {
                 e.preventDefault();
                 console.log('🎤 Toggle micro via Ctrl+Shift+M');
@@ -405,7 +356,6 @@ const VoiceManager = {
         });
         
         document.addEventListener('keyup', (e) => {
-            // Relâcher la touche push-to-talk = envoyer
             if (pushToTalkKeys.includes(e.code) && 
                 this.activationMode === 'push' && 
                 this.isPushKeyDown &&
@@ -417,7 +367,6 @@ const VoiceManager = {
                 this.pushKey = null;
                 this.stop();
                 
-                // Envoyer après un petit délai
                 setTimeout(() => {
                     if (this.transcript && this.transcript.length > 3) {
                         this.sendTranscript();
@@ -431,7 +380,6 @@ const VoiceManager = {
         console.log('   - Toggle micro: Ctrl+Shift+M');
     },
     
-    // Toggle
     toggle() {
         if (this.isListening) {
             this.stop();
@@ -440,9 +388,8 @@ const VoiceManager = {
         }
     },
     
-    // Démarrer
+    // ✅ CORRIGÉ : start()
     start() {
-        // 🛡️ NE PAS démarrer si TTS actif ou en mode mute
         if (this.isMutedForTTS || (window.TTSManager && TTSManager.isSpeaking)) {
             console.log('⚠️ Démarrage bloqué (TTS en cours)');
             return;
@@ -455,8 +402,9 @@ const VoiceManager = {
         
         this.transcript = '';
         
-        if (window.AnimationManager) {
-            window.AnimationManager.changeAnimation('thinking');
+        // ✅ Utiliser CharlyAnimationManager.think()
+        if (window.CharlyAnimationManager) {
+            window.CharlyAnimationManager.think();
         }
         
         try {
@@ -466,7 +414,6 @@ const VoiceManager = {
         }
     },
     
-    // Arrêter
     stop() {
         if (!this.recognition) return;
         
@@ -482,7 +429,6 @@ const VoiceManager = {
         }
     },
     
-    // Timer silence
     resetSilenceTimer() {
         if (this.silenceTimer) {
             clearTimeout(this.silenceTimer);
@@ -491,7 +437,6 @@ const VoiceManager = {
         this.silenceTimer = setTimeout(() => {
             console.log('⏱️ Silence détecté');
             
-            // En mode auto, envoyer si du texte
             if (this.activationMode === 'auto' && this.transcript && this.transcript.length > 3) {
                 this.sendTranscript();
                 this.transcript = '';
@@ -501,7 +446,6 @@ const VoiceManager = {
         }, 2000);
     },
     
-    // Mettre à jour transcription
     updateTranscript() {
         const input = document.getElementById('messageInput');
         if (input) {
@@ -511,7 +455,7 @@ const VoiceManager = {
         }
     },
     
-    // Envoyer
+    // ✅ CORRIGÉ : sendTranscript()
     sendTranscript() {
         if (!this.transcript || this.transcript.length < 3) return;
         
@@ -522,8 +466,9 @@ const VoiceManager = {
             input.value = this.transcript;
         }
         
-        if (window.AnimationManager) {
-            window.AnimationManager.changeAnimation('processing');
+        // ✅ Utiliser CharlyAnimationManager.process()
+        if (window.CharlyAnimationManager) {
+            window.CharlyAnimationManager.process();
         }
         
         setTimeout(() => {
@@ -535,25 +480,21 @@ const VoiceManager = {
         this.transcript = '';
     },
     
-    // Mettre à jour UI
     updateUI() {
         const button = document.getElementById('voiceButton');
         const indicator = document.getElementById('voiceIndicator');
         
         if (button) {
-            // Mode auto actif
             if (this.activationMode === 'auto' && this.autoModeActive) {
                 button.classList.add('listening');
                 button.innerHTML = '<i class="fas fa-microphone"></i>';
                 button.title = 'Détection auto active (clic pour désactiver)';
             }
-            // Écoute en cours (autres modes)
             else if (this.isListening) {
                 button.classList.add('listening');
                 button.innerHTML = '<i class="fas fa-stop"></i>';
                 button.title = 'Arrêter';
             }
-            // Inactif
             else {
                 button.classList.remove('listening');
                 button.innerHTML = '<i class="fas fa-microphone"></i>';

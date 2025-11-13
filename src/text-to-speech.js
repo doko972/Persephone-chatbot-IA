@@ -318,6 +318,7 @@ const TTSManager = {
     },
 
     // Lire un texte
+    // Lire un texte
     speak(text) {
         if (!this.synthesis || !text) return;
 
@@ -325,23 +326,25 @@ const TTSManager = {
         this.micWasActive = false;
         if (window.VoiceManager && VoiceManager.isListening) {
             this.micWasActive = true;
-            VoiceManager.muteForTTS(); // 🆕 Utiliser la méthode dédiée
+            VoiceManager.muteForTTS();
             console.log('🔇 Micro coupé pendant TTS');
         }
 
         // Arrêter la lecture en cours
         this.stop();
 
-        // Nettoyer le texte
-        text = text.replace(/[*#_~`]/g, ''); // Retirer markdown
-        text = text.trim();
+        // 🧹 Nettoyer le texte (émojis, markdown, etc.)
+        const cleanText = this.cleanTextForSpeech(text);
 
-        if (text.length === 0) return;
+        if (!cleanText || cleanText.trim().length === 0) {
+            console.log('🔇 Texte vide après nettoyage, pas de lecture');
+            return;
+        }
 
-        console.log('🔊 Lecture:', text.substring(0, 50) + '...');
+        console.log('🔊 Lecture:', cleanText.substring(0, 50) + '...');
 
-        // Créer l'utterance
-        this.currentUtterance = new SpeechSynthesisUtterance(text);
+        // Créer l'utterance avec le texte nettoyé
+        this.currentUtterance = new SpeechSynthesisUtterance(cleanText); // ✅ Utiliser cleanText
 
         // Configuration
         if (this.voices.length > 0 && this.voices[this.settings.voiceIndex]) {
@@ -354,28 +357,31 @@ const TTSManager = {
         // Events
         this.currentUtterance.onstart = () => {
             this.isSpeaking = true;
-            this.updateUI(text);
-            if (window.AnimationManager) {
-                window.AnimationManager.changeAnimation('chatting');
+            this.updateUI(cleanText); // ✅ Utiliser cleanText
+
+            // ✅ Utiliser CharlyAnimationManager
+            if (window.CharlyAnimationManager) {
+                window.CharlyAnimationManager.playSequence('chatting');
             }
         };
 
         this.currentUtterance.onend = () => {
             this.isSpeaking = false;
             this.updateUI();
-            if (window.AnimationManager) {
-                window.AnimationManager.toIdle();
+
+            // ✅ Utiliser CharlyAnimationManager
+            if (window.CharlyAnimationManager) {
+                window.CharlyAnimationManager.toIdle();
             }
 
-            // 🎤 RÉACTIVER le micro après la lecture (avec délai de sécurité)
+            // 🎤 RÉACTIVER le micro après la lecture
             if (this.micWasActive && window.VoiceManager) {
                 setTimeout(() => {
-                    // Double vérification : le TTS est bien terminé
                     if (!TTSManager.isSpeaking) {
-                        VoiceManager.unmuteForTTS(); // 🆕 Utiliser la méthode dédiée
+                        VoiceManager.unmuteForTTS();
                         console.log('🎤 Micro réactivé après TTS');
                     }
-                }, 800); // Délai de 800ms pour être sûr que le TTS est fini
+                }, 800);
             }
         };
 
@@ -387,7 +393,7 @@ const TTSManager = {
             // 🎤 RÉACTIVER le micro même en cas d'erreur
             if (this.micWasActive && window.VoiceManager) {
                 setTimeout(() => {
-                    VoiceManager.unmuteForTTS(); // 🆕 Utiliser la méthode dédiée
+                    VoiceManager.unmuteForTTS();
                     console.log('🎤 Micro réactivé après erreur TTS');
                 }, 500);
             }
@@ -395,6 +401,35 @@ const TTSManager = {
 
         // Lancer la lecture
         this.synthesis.speak(this.currentUtterance);
+    },
+
+    /**
+ * 🧹 Nettoyer le texte pour la lecture vocale
+ */
+    cleanTextForSpeech(text) {
+        if (!text) return '';
+
+        let cleanText = text;
+
+        // 1. Supprimer tous les émojis
+        cleanText = cleanText.replace(/[\u{1F300}-\u{1F9FF}]/gu, ''); // Émojis standards
+        cleanText = cleanText.replace(/[\u{2600}-\u{26FF}]/gu, '');   // Symboles & pictogrammes
+        cleanText = cleanText.replace(/[\u{2700}-\u{27BF}]/gu, '');   // Dingbats
+        cleanText = cleanText.replace(/[\u{1F000}-\u{1F02F}]/gu, ''); // Mahjong
+        cleanText = cleanText.replace(/[\u{1F0A0}-\u{1F0FF}]/gu, ''); // Cartes à jouer
+        cleanText = cleanText.replace(/[\u{1F100}-\u{1F64F}]/gu, ''); // Symboles supplémentaires
+        cleanText = cleanText.replace(/[\u{FE00}-\u{FE0F}]/gu, '');   // Sélecteurs de variante
+
+        // 2. Supprimer les balises HTML/Markdown
+        cleanText = cleanText.replace(/<[^>]*>/g, '');           // HTML
+        cleanText = cleanText.replace(/[*#_~`]/g, '');           // Markdown
+
+        // 3. Nettoyer les espaces multiples
+        cleanText = cleanText.replace(/\s+/g, ' ').trim();
+
+        console.log('🧹 Texte nettoyé:', cleanText.substring(0, 50));
+
+        return cleanText;
     },
 
     // Toggle lecture automatique
