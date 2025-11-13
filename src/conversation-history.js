@@ -165,31 +165,44 @@ const ConversationHistoryManager = {
 
         try {
             const date = new Date(conv.created_at);
-
             if (!isNaN(date.getTime())) {
                 timeStr = date.toLocaleTimeString('fr-FR', {
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-            } else {
-                console.warn('⚠️ Date invalide pour conversation:', conv.id, conv.created_at);
             }
         } catch (e) {
             console.error('❌ Erreur parsing date:', e);
         }
 
+        // ✅ Classes conditionnelles pour favoris
+        const cardClass = conv.is_favorite ? 'history-card favorite' : 'history-card';
+        const starClass = conv.is_favorite ? 'fas fa-star' : 'far fa-star';
+        const starColor = conv.is_favorite ? '#ffd700' : 'rgba(255, 255, 255, 0.5)';
+
         return `
-        <div class="history-card" 
+        <div class="${cardClass}" 
              data-conversation-id="${conv.id}" 
-             onclick="ConversationHistoryManager.loadConversation(${conv.id})">  <!-- 🆕 -->
+             onclick="ConversationHistoryManager.loadConversation(${conv.id})">
             <div class="history-card-header">
                 <div class="history-card-title">${this.truncate(conv.question, 50)}</div>
-                <button class="history-card-delete" 
-                        data-id="${conv.id}" 
-                        title="Supprimer"
-                        onclick="event.stopPropagation();">  <!-- 🆕 Empêcher le chargement -->
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="history-card-actions">
+                    <!-- 🆕 Bouton favori -->
+                    <button class="history-card-favorite" 
+                            data-id="${conv.id}" 
+                            title="${conv.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}"
+                            onclick="event.stopPropagation(); ConversationHistoryManager.toggleFavorite(${conv.id});">
+                        <i class="${starClass}" style="color: ${starColor};"></i>
+                    </button>
+                    
+                    <!-- Bouton supprimer -->
+                    <button class="history-card-delete" 
+                            data-id="${conv.id}" 
+                            title="Supprimer"
+                            onclick="event.stopPropagation();">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
             <div class="history-card-preview">
                 ${this.truncate(conv.response, 100)}
@@ -202,7 +215,60 @@ const ConversationHistoryManager = {
         </div>
     `;
     },
+    /**
+     * ⭐ Toggle le statut favori d'une conversation
+     */
+    async toggleFavorite(conversationId) {
+        console.log('⭐ Toggle favori:', conversationId);
 
+        const authToken = window.assistantAuth?.getToken();
+        if (!authToken) {
+            console.error('❌ Pas de token');
+            return;
+        }
+
+        try {
+            const API_BASE_URL = 'https://friend.ateliernormandduweb.fr/api';
+
+            const response = await fetch(`${API_BASE_URL}/chatbot/conversations/${conversationId}/favorite`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur toggle favori');
+            }
+
+            const data = await response.json();
+            console.log('✅ Favori togglé:', data);
+
+            // Mettre à jour localement
+            const conv = this.conversations.find(c => c.id === conversationId);
+            if (conv) {
+                conv.is_favorite = data.is_favorite;
+            }
+
+            // Re-render
+            this.render();
+
+            // Toast
+            if (window.showToast) {
+                const message = data.is_favorite ? '⭐ Ajouté aux favoris' : '☆ Retiré des favoris';
+                window.showToast(message, 'success');
+            }
+
+        } catch (error) {
+            console.error('❌ Erreur toggle favori:', error);
+
+            if (window.showToast) {
+                window.showToast('❌ Erreur', 'error');
+            }
+        }
+    },
     /**
      * 🔗 Attacher les listeners de suppression
      */
@@ -370,25 +436,34 @@ const ConversationHistoryManager = {
         console.log('📅 Filtre appliqué:', filter);
 
         if (filter === 'all') {
-            // Afficher toutes les conversations
             this.render();
             return;
         }
 
+        // 🆕 Filtre favoris
+        if (filter === 'favorites') {
+            const filtered = this.conversations.filter(conv => conv.is_favorite);
+            console.log(`✅ ${filtered.length} conversations favorites`);
+
+            const tempConversations = this.conversations;
+            this.conversations = filtered;
+            this.render();
+            this.conversations = tempConversations;
+            return;
+        }
+
+        // Reste du code pour today et week...
         const now = new Date();
         now.setHours(0, 0, 0, 0);
 
         let startDate = new Date(now);
 
         if (filter === 'today') {
-            // Aujourd'hui uniquement
             startDate = now;
         } else if (filter === 'week') {
-            // Cette semaine (7 derniers jours)
             startDate.setDate(now.getDate() - 7);
         }
 
-        // Filtrer les conversations
         const filtered = this.conversations.filter(conv => {
             const convDate = new Date(conv.created_at);
             convDate.setHours(0, 0, 0, 0);
@@ -397,7 +472,6 @@ const ConversationHistoryManager = {
 
         console.log(`✅ ${filtered.length} conversations trouvées pour "${filter}"`);
 
-        // Afficher temporairement les conversations filtrées
         const tempConversations = this.conversations;
         this.conversations = filtered;
         this.render();

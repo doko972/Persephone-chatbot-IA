@@ -238,7 +238,11 @@
 
 /* Carte de conversation */
 .history-card {
-  background: linear-gradient(135deg, rgba(42, 26, 61, 0.6) 0%, rgba(26, 10, 31, 0.6) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(42, 26, 61, 0.6) 0%,
+    rgba(26, 10, 31, 0.6) 100%
+  );
   border: 1px solid rgba(214, 26, 77, 0.2);
   border-radius: 12px;
   padding: 1rem;
@@ -250,7 +254,7 @@
 }
 
 .history-card::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0;
@@ -262,7 +266,11 @@
 }
 
 .history-card:hover {
-  background: linear-gradient(135deg, rgba(214, 26, 77, 0.2) 0%, rgba(42, 26, 61, 0.8) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(214, 26, 77, 0.2) 0%,
+    rgba(42, 26, 61, 0.8) 100%
+  );
   border-color: #d61a4d;
   transform: translateX(-5px);
   box-shadow: 0 8px 24px rgba(214, 26, 77, 0.3);
@@ -395,7 +403,8 @@
 }
 
 @keyframes pulsate {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -466,11 +475,21 @@
   animation: slideInRight 0.4s ease-out backwards;
 }
 
-.history-card:nth-child(1) { animation-delay: 0.05s; }
-.history-card:nth-child(2) { animation-delay: 0.1s; }
-.history-card:nth-child(3) { animation-delay: 0.15s; }
-.history-card:nth-child(4) { animation-delay: 0.2s; }
-.history-card:nth-child(5) { animation-delay: 0.25s; }
+.history-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.history-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.history-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.history-card:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.history-card:nth-child(5) {
+  animation-delay: 0.25s;
+}
 
 /* ============================================
    BOUTON HISTORIQUE DANS LE HEADER
@@ -504,7 +523,8 @@
 }
 
 @keyframes badgePulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 2px 8px rgba(214, 26, 77, 0.6);
   }
@@ -512,6 +532,53 @@
     transform: scale(1.1);
     box-shadow: 0 4px 16px rgba(214, 26, 77, 0.9);
   }
+}
+/* Actions dans le header de la carte */
+.history-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Bouton favori */
+.history-card-favorite {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.history-card-favorite:hover {
+  background: rgba(255, 215, 0, 0.3);
+  border-color: #ffd700;
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+/* Carte favorite */
+.history-card.favorite {
+  border-color: rgba(255, 215, 0, 0.4);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.1) 0%,
+    rgba(42, 26, 61, 0.6) 100%
+  );
+}
+
+.history-card.favorite::before {
+  background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%);
+}
+
+.history-card.favorite:hover {
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
 }
 
 /* ============================================
