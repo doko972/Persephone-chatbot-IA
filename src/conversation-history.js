@@ -58,14 +58,17 @@ const ConversationHistoryManager = {
     },
 
     /**
-     * 🗑️ Supprimer UNE conversation (CORRIGÉ)
+     * 🗑️ Supprimer UNE conversation
      */
     async deleteConversation(conversationId) {
         console.log('🗑️ Suppression conversation:', conversationId);
-
+        
         const authToken = window.assistantAuth?.getToken();
         if (!authToken) {
             console.error('❌ Pas de token pour supprimer');
+            if (window.showToast) {
+                window.showToast('Vous devez être connecté', 'error');
+            }
             return;
         }
 
@@ -76,32 +79,39 @@ const ConversationHistoryManager = {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${authToken}`,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             });
 
+            console.log('📥 Statut réponse:', response.status, response.ok);
+
             if (!response.ok) {
-                throw new Error('Erreur suppression');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('❌ Erreur HTTP:', errorData);
+                throw new Error(errorData.message || 'Erreur suppression');
             }
 
-            // ✅ CORRECTION : Supprimer UNIQUEMENT la conversation ciblée
+            const data = await response.json();
+            console.log('✅ Réponse serveur:', data);
+
+            // ✅ Supprimer UNIQUEMENT la conversation ciblée
             this.conversations = this.conversations.filter(conv => conv.id !== conversationId);
             
-            console.log('✅ Conversation supprimée:', conversationId);
+            console.log('✅ Conversation supprimée localement:', conversationId);
+            console.log('📊 Conversations restantes:', this.conversations.length);
             
-            // Re-render l'historique
             this.render();
 
-            // Toast de confirmation
             if (window.showToast) {
-                window.showToast('Conversation supprimée', 'success');
+                window.showToast('✅ Conversation supprimée', 'success');
             }
 
         } catch (error) {
             console.error('❌ Erreur suppression:', error);
             
             if (window.showToast) {
-                window.showToast('Erreur lors de la suppression', 'error');
+                window.showToast('❌ Erreur lors de la suppression', 'error');
             }
         }
     },
@@ -148,45 +158,43 @@ const ConversationHistoryManager = {
     /**
      * 🎴 Créer une carte de conversation
      */
-renderConversationCard(conv) {
-    // ✅ Gérer les dates invalides
-    let timeStr = 'Date inconnue';
-    
-    try {
-        const date = new Date(conv.created_at);
+    renderConversationCard(conv) {
+        let timeStr = 'Date inconnue';
         
-        // Vérifier si la date est valide
-        if (!isNaN(date.getTime())) {
-            timeStr = date.toLocaleTimeString('fr-FR', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-        } else {
-            console.warn('⚠️ Date invalide pour conversation:', conv.id, conv.created_at);
+        try {
+            const date = new Date(conv.created_at);
+            
+            if (!isNaN(date.getTime())) {
+                timeStr = date.toLocaleTimeString('fr-FR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            } else {
+                console.warn('⚠️ Date invalide pour conversation:', conv.id, conv.created_at);
+            }
+        } catch (e) {
+            console.error('❌ Erreur parsing date:', e);
         }
-    } catch (e) {
-        console.error('❌ Erreur parsing date:', e);
-    }
 
-    return `
-        <div class="history-card" data-conversation-id="${conv.id}">
-            <div class="history-card-header">
-                <div class="history-card-title">${this.truncate(conv.question, 50)}</div>
-                <button class="history-card-delete" data-id="${conv.id}" title="Supprimer">
-                    <i class="fas fa-trash"></i>
-                </button>
+        return `
+            <div class="history-card" data-conversation-id="${conv.id}">
+                <div class="history-card-header">
+                    <div class="history-card-title">${this.truncate(conv.question, 50)}</div>
+                    <button class="history-card-delete" data-id="${conv.id}" title="Supprimer">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="history-card-preview">
+                    ${this.truncate(conv.response, 100)}
+                </div>
+                <div class="history-card-footer">
+                    <span class="history-card-time">
+                        <i class="far fa-clock"></i> ${timeStr}
+                    </span>
+                </div>
             </div>
-            <div class="history-card-preview">
-                ${this.truncate(conv.response, 100)}
-            </div>
-            <div class="history-card-footer">
-                <span class="history-card-time">
-                    <i class="far fa-clock"></i> ${timeStr}
-                </span>
-            </div>
-        </div>
-    `;
-},
+        `;
+    },
 
     /**
      * 🔗 Attacher les listeners de suppression
@@ -200,7 +208,6 @@ renderConversationCard(conv) {
                 
                 const conversationId = parseInt(btn.getAttribute('data-id'));
                 
-                // Confirmer la suppression
                 if (confirm('Voulez-vous vraiment supprimer cette conversation ?')) {
                     this.deleteConversation(conversationId);
                 }
@@ -307,10 +314,30 @@ renderConversationCard(conv) {
                 this.filterConversations(e.target.value);
             });
         }
+
+        // 🆕 FILTRES PAR DATE
+        const filterChips = document.querySelectorAll('.filter-chip');
+        if (filterChips.length > 0) {
+            filterChips.forEach(chip => {
+                chip.addEventListener('click', (e) => {
+                    // Retirer la classe active de tous les filtres
+                    filterChips.forEach(c => c.classList.remove('active'));
+                    
+                    // Ajouter active au filtre cliqué
+                    chip.classList.add('active');
+                    
+                    // Appliquer le filtre
+                    const filter = chip.getAttribute('data-filter');
+                    this.applyDateFilter(filter);
+                });
+            });
+            
+            console.log('✅ Filtres de date configurés');
+        }
     },
 
     /**
-     * 🔍 Filtrer les conversations
+     * 🔍 Filtrer les conversations par recherche
      */
     filterConversations(query) {
         if (!query) {
@@ -323,6 +350,47 @@ renderConversationCard(conv) {
             conv.response.toLowerCase().includes(query.toLowerCase())
         );
 
+        const tempConversations = this.conversations;
+        this.conversations = filtered;
+        this.render();
+        this.conversations = tempConversations;
+    },
+
+    /**
+     * 📅 Filtrer par période
+     */
+    applyDateFilter(filter) {
+        console.log('📅 Filtre appliqué:', filter);
+        
+        if (filter === 'all') {
+            // Afficher toutes les conversations
+            this.render();
+            return;
+        }
+        
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        
+        let startDate = new Date(now);
+        
+        if (filter === 'today') {
+            // Aujourd'hui uniquement
+            startDate = now;
+        } else if (filter === 'week') {
+            // Cette semaine (7 derniers jours)
+            startDate.setDate(now.getDate() - 7);
+        }
+        
+        // Filtrer les conversations
+        const filtered = this.conversations.filter(conv => {
+            const convDate = new Date(conv.created_at);
+            convDate.setHours(0, 0, 0, 0);
+            return convDate >= startDate;
+        });
+        
+        console.log(`✅ ${filtered.length} conversations trouvées pour "${filter}"`);
+        
+        // Afficher temporairement les conversations filtrées
         const tempConversations = this.conversations;
         this.conversations = filtered;
         this.render();
