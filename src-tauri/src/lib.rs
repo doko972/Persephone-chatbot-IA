@@ -21,27 +21,28 @@ pub fn run() {
                         let screen_size = monitor.size();
                         let screen_width = screen_size.width as f64;
                         let screen_height = screen_size.height as f64;
-                        
-                        let widget_width = 400.0;
-                        let widget_height = 400.0;
-                        
-                        // Position : 95% droite (coin bas-droit), 90% bas
-                        let x = (screen_width * 0.85) - widget_width;
-                        let y = (screen_height * 0.75) - widget_height;
-                        
+
+                        let widget_width = 450.0; // Largeur du chatbot
+                        let widget_height = 700.0; // Hauteur du chatbot
+
+                        // 🎯 NOUVELLE POSITION : Coin bas-droit VISIBLE
+                        // 20px de marge à droite et en bas
+                        let x = (screen_width - widget_width) / 2.0;
+                        let y = (screen_height - widget_height) / 2.0;
+
                         // Positionner la fenêtre (desktop uniquement)
                         #[cfg(not(target_os = "android"))]
                         {
                             let _ = window.set_position(tauri::Position::Physical(
-                                tauri::PhysicalPosition { 
-                                    x: x as i32, 
-                                    y: y as i32 
-                                }
+                                tauri::PhysicalPosition {
+                                    x: x as i32,
+                                    y: y as i32,
+                                },
                             ));
                         }
-                        
-                        println!("Écran: {}x{}", screen_width, screen_height);
-                        println!("Widget positionné à: x={}, y={}", x as i32, y as i32);
+
+                        println!("🖥️ Écran: {}x{}", screen_width, screen_height);
+                        println!("📍 Widget positionné à: x={}, y={}", x as i32, y as i32);
                     }
                 }
             }

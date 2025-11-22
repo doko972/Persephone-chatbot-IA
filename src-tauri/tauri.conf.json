@@ -10,7 +10,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Assistant de Persephone",
+        "title": "Assistant IA",
         "width": 420,
         "height": 650,
         "minWidth": 400,
