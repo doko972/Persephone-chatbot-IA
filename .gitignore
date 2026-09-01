@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Android signing secrets - never commit these
+src-tauri/gen/android/**/keystore.properties
+src-tauri/gen/android/**/*.keystore
+src-tauri/gen/android/**/*.jks
+
+# Stray local config backups
+tauri.conf.json__*
