@@ -26,7 +26,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' https://friend.ateliernormandduweb.fr; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data: https:",
+      "csp": "default-src 'self'; connect-src 'self' https://friend.ateliernormandduweb.fr; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data:",
       "capabilities": [
         "default",
         {

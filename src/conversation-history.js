@@ -125,40 +125,44 @@ const ConversationHistoryManager = {
         const container = document.getElementById('historyContent');
         if (!container) return;
 
+        container.innerHTML = '';
+
         if (this.conversations.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>Aucune conversation enregistrée</p>
-                </div>
-            `;
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.innerHTML = '<i class="fas fa-inbox"></i>';
+            const p = document.createElement('p');
+            p.textContent = 'Aucune conversation enregistrée';
+            empty.appendChild(p);
+            container.appendChild(empty);
             return;
         }
 
         // Grouper par date
         const grouped = this.groupByDate(this.conversations);
 
-        let html = '';
-
         for (const [dateLabel, convs] of Object.entries(grouped)) {
-            html += `<div class="history-date-group">`;
-            html += `<div class="history-date-label">${dateLabel}</div>`;
+            const group = document.createElement('div');
+            group.className = 'history-date-group';
+
+            const label = document.createElement('div');
+            label.className = 'history-date-label';
+            label.textContent = dateLabel;
+            group.appendChild(label);
 
             convs.forEach(conv => {
-                html += this.renderConversationCard(conv);
+                group.appendChild(this.renderConversationCard(conv));
             });
 
-            html += `</div>`;
+            container.appendChild(group);
         }
-
-        container.innerHTML = html;
-
-        // Attacher les événements de suppression
-        this.attachDeleteListeners();
     },
 
     /**
      * 🎴 Créer une carte de conversation
+     * Construite via createElement/textContent (jamais innerHTML avec des
+     * données serveur) car question/réponse peuvent contenir du texte
+     * arbitraire (y compris issu de résultats de recherche web).
      */
     renderConversationCard(conv) {
         let timeStr = 'Date inconnue';
@@ -175,45 +179,69 @@ const ConversationHistoryManager = {
             console.error('❌ Erreur parsing date:', e);
         }
 
-        // ✅ Classes conditionnelles pour favoris
-        const cardClass = conv.is_favorite ? 'history-card favorite' : 'history-card';
-        const starClass = conv.is_favorite ? 'fas fa-star' : 'far fa-star';
-        const starColor = conv.is_favorite ? '#ffd700' : 'rgba(255, 255, 255, 0.5)';
+        const card = document.createElement('div');
+        card.className = conv.is_favorite ? 'history-card favorite' : 'history-card';
+        card.dataset.conversationId = conv.id;
+        card.addEventListener('click', () => this.loadConversation(conv.id));
 
-        return `
-        <div class="${cardClass}" 
-             data-conversation-id="${conv.id}" 
-             onclick="ConversationHistoryManager.loadConversation(${conv.id})">
-            <div class="history-card-header">
-                <div class="history-card-title">${this.truncate(conv.question, 50)}</div>
-                <div class="history-card-actions">
-                    <!-- 🆕 Bouton favori -->
-                    <button class="history-card-favorite" 
-                            data-id="${conv.id}" 
-                            title="${conv.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}"
-                            onclick="event.stopPropagation(); ConversationHistoryManager.toggleFavorite(${conv.id});">
-                        <i class="${starClass}" style="color: ${starColor};"></i>
-                    </button>
-                    
-                    <!-- Bouton supprimer -->
-                    <button class="history-card-delete" 
-                            data-id="${conv.id}" 
-                            title="Supprimer"
-                            onclick="event.stopPropagation();">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="history-card-preview">
-                ${this.truncate(conv.response, 100)}
-            </div>
-            <div class="history-card-footer">
-                <span class="history-card-time">
-                    <i class="far fa-clock"></i> ${timeStr}
-                </span>
-            </div>
-        </div>
-    `;
+        const header = document.createElement('div');
+        header.className = 'history-card-header';
+
+        const title = document.createElement('div');
+        title.className = 'history-card-title';
+        title.textContent = this.truncate(conv.question, 50);
+        header.appendChild(title);
+
+        const cardActions = document.createElement('div');
+        cardActions.className = 'history-card-actions';
+
+        // Bouton favori
+        const favoriteBtn = document.createElement('button');
+        favoriteBtn.className = 'history-card-favorite';
+        favoriteBtn.dataset.id = conv.id;
+        favoriteBtn.title = conv.is_favorite ? 'Retirer des favoris' : 'Ajouter aux favoris';
+        const star = document.createElement('i');
+        star.className = conv.is_favorite ? 'fas fa-star' : 'far fa-star';
+        star.style.color = conv.is_favorite ? '#ffd700' : 'rgba(255, 255, 255, 0.5)';
+        favoriteBtn.appendChild(star);
+        favoriteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleFavorite(conv.id);
+        });
+        cardActions.appendChild(favoriteBtn);
+
+        // Bouton supprimer
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'history-card-delete';
+        deleteBtn.dataset.id = conv.id;
+        deleteBtn.title = 'Supprimer';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm('Voulez-vous vraiment supprimer cette conversation ?')) {
+                this.deleteConversation(conv.id);
+            }
+        });
+        cardActions.appendChild(deleteBtn);
+
+        header.appendChild(cardActions);
+        card.appendChild(header);
+
+        const preview = document.createElement('div');
+        preview.className = 'history-card-preview';
+        preview.textContent = this.truncate(conv.response, 100);
+        card.appendChild(preview);
+
+        const footer = document.createElement('div');
+        footer.className = 'history-card-footer';
+        const time = document.createElement('span');
+        time.className = 'history-card-time';
+        time.innerHTML = '<i class="far fa-clock"></i> ';
+        time.appendChild(document.createTextNode(timeStr));
+        footer.appendChild(time);
+        card.appendChild(footer);
+
+        return card;
     },
     /**
      * ⭐ Toggle le statut favori d'une conversation
@@ -269,25 +297,6 @@ const ConversationHistoryManager = {
             }
         }
     },
-    /**
-     * 🔗 Attacher les listeners de suppression
-     */
-    attachDeleteListeners() {
-        const deleteButtons = document.querySelectorAll('.history-card-delete');
-
-        deleteButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-
-                const conversationId = parseInt(btn.getAttribute('data-id'));
-
-                if (confirm('Voulez-vous vraiment supprimer cette conversation ?')) {
-                    this.deleteConversation(conversationId);
-                }
-            });
-        });
-    },
-
     /**
      * 📅 Grouper les conversations par date
      */
@@ -355,17 +364,20 @@ const ConversationHistoryManager = {
      */
     showError() {
         const container = document.getElementById('historyContent');
-        if (container) {
-            container.innerHTML = `
-                <div class="error-state">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Erreur lors du chargement</p>
-                    <button onclick="ConversationHistoryManager.loadConversations()">
-                        Réessayer
-                    </button>
-                </div>
-            `;
-        }
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const errorState = document.createElement('div');
+        errorState.className = 'error-state';
+        errorState.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Erreur lors du chargement</p>';
+
+        const retryBtn = document.createElement('button');
+        retryBtn.textContent = 'Réessayer';
+        retryBtn.addEventListener('click', () => this.loadConversations());
+        errorState.appendChild(retryBtn);
+
+        container.appendChild(errorState);
     },
 
     /**

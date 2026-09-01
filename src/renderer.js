@@ -1375,9 +1375,6 @@ async function sendMessage() {
             headers['Authorization'] = `Bearer ${authToken}`;
         }
 
-        console.log('📤 Headers envoyés:', headers);
-        console.log('📤 Token:', authToken);
-
         // Récupérer la préférence de mémoire contextuelle
         const useContext = document.getElementById('useContextToggle')?.checked ?? true;
 
