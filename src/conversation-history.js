@@ -21,6 +21,22 @@ const ConversationHistoryManager = {
      * 🔄 Charger les conversations depuis l'API
      */
     async loadConversations() {
+        if (window.LocalMode?.isEnabled()) {
+            this.isLoading = true;
+            this.showLoadingState();
+            try {
+                this.conversations = await LocalMode.listConversations();
+                console.log('✅ Historique local chargé:', this.conversations.length, 'conversations');
+                this.render();
+            } catch (error) {
+                console.error('❌ Erreur chargement historique local:', error);
+                this.showError();
+            } finally {
+                this.isLoading = false;
+            }
+            return;
+        }
+
         const authToken = window.assistantAuth?.getToken();
 
         if (!authToken) {
@@ -64,6 +80,23 @@ const ConversationHistoryManager = {
      */
     async deleteConversation(conversationId) {
         console.log('🗑️ Suppression conversation:', conversationId);
+
+        if (window.LocalMode?.isEnabled()) {
+            try {
+                await LocalMode.deleteConversation(conversationId);
+                this.conversations = this.conversations.filter(conv => conv.id !== conversationId);
+                this.render();
+                if (window.showToast) {
+                    window.showToast('✅ Conversation supprimée', 'success');
+                }
+            } catch (error) {
+                console.error('❌ Erreur suppression locale:', error);
+                if (window.showToast) {
+                    window.showToast('❌ Erreur lors de la suppression', 'error');
+                }
+            }
+            return;
+        }
 
         const authToken = window.assistantAuth?.getToken();
         if (!authToken) {
@@ -248,6 +281,27 @@ const ConversationHistoryManager = {
      */
     async toggleFavorite(conversationId) {
         console.log('⭐ Toggle favori:', conversationId);
+
+        if (window.LocalMode?.isEnabled()) {
+            try {
+                const isFavorite = await LocalMode.toggleFavorite(conversationId);
+                const conv = this.conversations.find(c => c.id === conversationId);
+                if (conv) {
+                    conv.is_favorite = isFavorite;
+                }
+                this.render();
+                if (window.showToast) {
+                    const message = isFavorite ? '⭐ Ajouté aux favoris' : '☆ Retiré des favoris';
+                    window.showToast(message, 'success');
+                }
+            } catch (error) {
+                console.error('❌ Erreur toggle favori local:', error);
+                if (window.showToast) {
+                    window.showToast('❌ Erreur', 'error');
+                }
+            }
+            return;
+        }
 
         const authToken = window.assistantAuth?.getToken();
         if (!authToken) {

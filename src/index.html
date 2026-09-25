@@ -233,6 +233,44 @@
           style="border-top: 1px solid var(--border-color); margin: 2rem 0"
         ></div>
 
+        <!-- Mode de fonctionnement -->
+        <div class="form-group">
+          <label><i class="fas fa-cloud"></i> Mode de fonctionnement</label>
+          <div class="memory-toggle-container">
+            <label class="memory-switch">
+              <input type="checkbox" id="localModeToggle" />
+              <span class="memory-slider"></span>
+            </label>
+            <div class="memory-info">
+              <div class="memory-title">
+                <span id="modeStatusText">Mode cloud</span>
+              </div>
+              <div class="memory-description">
+                En mode local, Charly utilise votre propre clé OpenAI et
+                stocke vos conversations uniquement sur cet appareil.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" id="localApiKeyGroup" style="display: none">
+          <label for="localApiKey"
+            ><i class="fas fa-key"></i> Clé API OpenAI</label
+          >
+          <input
+            type="password"
+            id="localApiKey"
+            class="form-input"
+            placeholder="sk-..."
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Séparateur -->
+        <div
+          style="border-top: 1px solid var(--border-color); margin: 2rem 0"
+        ></div>
+
         <!-- URL de l'API -->
         <div class="form-group">
           <label for="apiUrl"><i class="fas fa-link"></i> URL de l'API</label>
@@ -306,6 +344,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="local-mode.js"></script>
     <script src="voice-manager.js"></script>
     <script src="text-to-speech.js"></script>
     <script src="search-results-renderer.js"></script>

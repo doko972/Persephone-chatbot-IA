@@ -723,7 +723,11 @@ const elements = {
     minimizeBtn: document.getElementById('minimizeBtn'),
     closeBtn: document.getElementById('closeBtn'),
     toggleFullscreenBtn: document.getElementById('toggleFullscreenBtn'),
-    themeToggle: document.getElementById('themeToggle')
+    themeToggle: document.getElementById('themeToggle'),
+    localModeToggle: document.getElementById('localModeToggle'),
+    modeStatusText: document.getElementById('modeStatusText'),
+    localApiKeyGroup: document.getElementById('localApiKeyGroup'),
+    localApiKeyInput: document.getElementById('localApiKey')
 };
 
 // Initialisation
@@ -1197,7 +1201,7 @@ function toggleHistoryPanel() {
         console.log('📚 Historique ouvert');
 
         // Charger l'historique si authentifié
-        if (window.ConversationHistoryManager && window.assistantAuth?.isAuthenticated()) {
+        if (window.ConversationHistoryManager && (LocalMode.isEnabled() || window.assistantAuth?.isAuthenticated())) {
             window.ConversationHistoryManager.loadConversations();
         } else {
             // Afficher message de connexion requise
@@ -1264,6 +1268,14 @@ function saveSettings() {
     }
 
     localStorage.setItem('apiUrl', config.apiUrl);
+
+    if (elements.localModeToggle) {
+        LocalMode.setMode(elements.localModeToggle.checked ? 'local' : 'cloud');
+    }
+    if (elements.localApiKeyInput) {
+        LocalMode.setApiKey(elements.localApiKeyInput.value);
+    }
+
     showConnectionStatus('✅ Paramètres sauvegardés !', 'success');
 
     setTimeout(() => {
@@ -1364,95 +1376,118 @@ async function sendMessage() {
     AnimationManager.process();
 
     try {
-        // Préparer les headers
-        const headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        };
-
-        // Ajouter le token si connecté
-        if (authToken) {
-            headers['Authorization'] = `Bearer ${authToken}`;
-        }
-
         // Récupérer la préférence de mémoire contextuelle
         const useContext = document.getElementById('useContextToggle')?.checked ?? true;
 
-        // Appel API
-        const response = await fetch(`${API_BASE_URL}/chatbot/message`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                question: message,
-                conversation_history: conversationHistory,
-                device_identifier: getDeviceId(),
-                use_context: useContext,
-                enable_web_search: true
-            })
-        });
+        let botResponse;
+        let searchResults = null;
 
-        // Gestion des erreurs HTTP
-        if (!response.ok) {
-            let errorData = {};
-            try {
-                errorData = await response.json();
-            } catch (e) {
-                // Impossible de parser la réponse
+        if (LocalMode.isEnabled()) {
+            // 🏠 MODE LOCAL — appel direct à OpenAI, pas de recherche web
+            botResponse = await LocalMode.sendChatCompletion(conversationHistory, useContext);
+            await LocalMode.saveConversation(message, botResponse);
+        } else {
+            // ☁️ MODE CLOUD — backend Laravel
+            const headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            };
+
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
             }
 
-            let friendlyMessage = '';
-
-            if (response.status === 422) {
-                friendlyMessage = "Pourriez-vous reformuler votre demande de manière plus détaillée ?";
-                // 🆕 Animation de confusion
-                AnimationManager.changeAnimation('confused', 4000);
-            } else if (response.status === 500) {
-                friendlyMessage = "Une erreur technique est survenue. Veuillez réessayer dans quelques instants.";
-                // 🆕 Animation d'erreur
-                AnimationManager.changeAnimation('error', 4000);
-            } else if (response.status === 404) {
-                friendlyMessage = "Service temporairement indisponible. Veuillez contacter le support.";
-                AnimationManager.changeAnimation('error', 4000);
-            } else if (response.status === 401 || response.status === 403) {
-                friendlyMessage = "Votre session a expiré. Veuillez vous reconnecter.";
-                AnimationManager.changeAnimation('confused', 4000);
-            } else {
-                friendlyMessage = "Une erreur est survenue. Veuillez réessayer.";
-                AnimationManager.changeAnimation('error', 4000);
-            }
-
-            showTypingIndicator(false);
-            addMessage(friendlyMessage, 'bot');
-
-            console.error('❌ Erreur serveur:', {
-                status: response.status,
-                data: errorData
+            const response = await fetch(`${API_BASE_URL}/chatbot/message`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    question: message,
+                    conversation_history: conversationHistory,
+                    device_identifier: getDeviceId(),
+                    use_context: useContext,
+                    enable_web_search: true
+                })
             });
 
-            elements.sendButton.disabled = false;
-            elements.messageInput.disabled = false;
-            elements.messageInput.focus();
-            return;
+            // Gestion des erreurs HTTP
+            if (!response.ok) {
+                let errorData = {};
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    // Impossible de parser la réponse
+                }
+
+                let friendlyMessage = '';
+
+                if (response.status === 422) {
+                    friendlyMessage = "Pourriez-vous reformuler votre demande de manière plus détaillée ?";
+                    // 🆕 Animation de confusion
+                    AnimationManager.changeAnimation('confused', 4000);
+                } else if (response.status === 500) {
+                    friendlyMessage = "Une erreur technique est survenue. Veuillez réessayer dans quelques instants.";
+                    // 🆕 Animation d'erreur
+                    AnimationManager.changeAnimation('error', 4000);
+                } else if (response.status === 404) {
+                    friendlyMessage = "Service temporairement indisponible. Veuillez contacter le support.";
+                    AnimationManager.changeAnimation('error', 4000);
+                } else if (response.status === 401 || response.status === 403) {
+                    friendlyMessage = "Votre session a expiré. Veuillez vous reconnecter.";
+                    AnimationManager.changeAnimation('confused', 4000);
+                } else {
+                    friendlyMessage = "Une erreur est survenue. Veuillez réessayer.";
+                    AnimationManager.changeAnimation('error', 4000);
+                }
+
+                showTypingIndicator(false);
+                addMessage(friendlyMessage, 'bot');
+
+                console.error('❌ Erreur serveur:', {
+                    status: response.status,
+                    data: errorData
+                });
+
+                elements.sendButton.disabled = false;
+                elements.messageInput.disabled = false;
+                elements.messageInput.focus();
+                return;
+            }
+
+            // Récupérer la réponse
+            const data = await response.json();
+            botResponse = data.response;
+            searchResults = data.search_results;
+
+            console.log('📥 Réponse complète de l\'API:', data);
+
+            // Logs de debug
+            if (data.context_used) {
+                console.log(`✅ Mémoire active (${data.context_messages_count} messages en contexte)`);
+            } else {
+                console.log('ℹ️ Mémoire désactivée ou mode anonyme');
+            }
+
+            if (data.authenticated) {
+                console.log('✅ Conversation synchronisée avec le compte utilisateur');
+                if (window.showToast) {
+                    showToast('💾 Synchronisé', 'success');
+                }
+            } else {
+                console.log('ℹ️ Mode anonyme - conversation non sauvegardée');
+            }
         }
-
-        // Récupérer la réponse
-        const data = await response.json();
-        const botResponse = data.response;
-
-
-        console.log('📥 Réponse complète de l\'API:', data);
 
         // Afficher la réponse
         addMessage(botResponse, 'bot');
 
-        // 🆕 AFFICHER LES RÉSULTATS DE RECHERCHE
-        if (data.search_results && data.search_results.results && data.search_results.results.length > 0) {
+        // 🆕 AFFICHER LES RÉSULTATS DE RECHERCHE (mode cloud uniquement)
+        if (searchResults && searchResults.results && searchResults.results.length > 0) {
             setTimeout(() => {
                 const lastBotMessage = document.querySelector('.bot-message:last-child .message-content');
                 if (lastBotMessage && window.SearchResultsRenderer) {
                     SearchResultsRenderer.render(
-                        data.search_results.results,
-                        data.search_results.query,
+                        searchResults.results,
+                        searchResults.query,
                         lastBotMessage
                     );
                 }
@@ -1461,22 +1496,6 @@ async function sendMessage() {
 
         // 🆕 Animation basée sur le sentiment de la réponse
         AnimationManager.respondWith(botResponse);
-
-        // Logs de debug
-        if (data.context_used) {
-            console.log(`✅ Mémoire active (${data.context_messages_count} messages en contexte)`);
-        } else {
-            console.log('ℹ️ Mémoire désactivée ou mode anonyme');
-        }
-
-        if (data.authenticated) {
-            console.log('✅ Conversation synchronisée avec le compte utilisateur');
-            if (window.showToast) {
-                showToast('💾 Synchronisé', 'success');
-            }
-        } else {
-            console.log('ℹ️ Mode anonyme - conversation non sauvegardée');
-        }
 
         // Ajouter la réponse à l'historique
         conversationHistory.push({
@@ -1494,7 +1513,9 @@ async function sendMessage() {
 
     } catch (error) {
         console.error('Erreur:', error);
-        let friendlyMessage = "Impossible de se connecter au serveur. Vérifiez votre connexion internet.";
+        const friendlyMessage = error?.message && LocalMode.isEnabled()
+            ? error.message
+            : "Impossible de se connecter au serveur. Vérifiez votre connexion internet.";
         addMessage(friendlyMessage, 'bot');
 
         // 🆕 Animation d'erreur réseau
@@ -2037,6 +2058,42 @@ function updateMemoryStatus() {
 function isMemoryEnabled() {
     const memoryToggle = document.getElementById('useContextToggle');
     return memoryToggle ? memoryToggle.checked : true;
+}
+
+// ============================================
+// GESTION DU MODE LOCAL (clé OpenAI perso + SQLite)
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (elements.localModeToggle) {
+        elements.localModeToggle.checked = LocalMode.isEnabled();
+        if (elements.localApiKeyInput) {
+            elements.localApiKeyInput.value = LocalMode.getApiKey();
+        }
+        updateModeStatus();
+
+        elements.localModeToggle.addEventListener('change', function () {
+            updateModeStatus();
+        });
+    }
+});
+
+function updateModeStatus() {
+    if (!elements.localModeToggle || !elements.modeStatusText) return;
+
+    const isLocal = elements.localModeToggle.checked;
+
+    if (elements.localApiKeyGroup) {
+        elements.localApiKeyGroup.style.display = isLocal ? '' : 'none';
+    }
+
+    if (isLocal) {
+        elements.modeStatusText.textContent = 'Mode local';
+        elements.modeStatusText.style.color = '#4caf50';
+    } else {
+        elements.modeStatusText.textContent = 'Mode cloud';
+        elements.modeStatusText.style.color = '';
+    }
 }
 
 window.assistantShortcuts = {

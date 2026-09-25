@@ -18,11 +18,21 @@ const TTSManager = {
         volume: 1.0    // 0 à 1
     },
 
-    // 🔑 Récupérer la clé OpenAI depuis Laravel
+    // 🔑 Récupérer la clé OpenAI (mode local : clé perso, sinon Laravel)
     async fetchOpenAIKey() {
+        if (window.LocalMode?.isEnabled()) {
+            this.openaiKey = LocalMode.getApiKey();
+            if (!this.openaiKey) {
+                console.warn('⚠️ Mode local sans clé API - TTS désactivé');
+                return false;
+            }
+            console.log('✅ Clé OpenAI locale utilisée (TTS)');
+            return true;
+        }
+
         try {
             const API_BASE_URL = 'https://friend.ateliernormandduweb.fr/api';
-            
+
             // Récupérer le token d'authentification
             const authToken = localStorage.getItem('auth_token');
             

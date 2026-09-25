@@ -7,6 +7,8 @@
     "core:default",
     "http:default",
     "shell:allow-open",
+    "sql:default",
+    "sql:allow-execute",
     {
       "identifier": "http:allow-fetch",
       "allow": [
@@ -18,6 +20,9 @@
         },
         {
           "url": "https://friend.ateliernormandduweb.fr/*"
+        },
+        {
+          "url": "https://api.openai.com/*"
         }
       ]
     },
