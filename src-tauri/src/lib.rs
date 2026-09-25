@@ -8,7 +8,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            // Positionnement responsive du widget
+            // Centrage du widget sur l'écran courant
             if let Some(window) = app.get_webview_window("main") {
                 if let Ok(monitor) = window.current_monitor() {
                     if let Some(monitor) = monitor {
@@ -16,11 +16,15 @@ pub fn run() {
                         let screen_width = screen_size.width as f64;
                         let screen_height = screen_size.height as f64;
 
-                        let widget_width = 450.0; // Largeur du chatbot
-                        let widget_height = 700.0; // Hauteur du chatbot
+                        // Lire la taille réelle de la fenêtre (tauri.conf.json)
+                        // plutôt que de la recopier en dur ici : les deux
+                        // avaient fini par diverger (450x700 vs 420x650),
+                        // ce qui décalait le centrage et, côté CSS, faisait
+                        // déborder l'ombre de la carte hors de la fenêtre.
+                        let window_size = window.outer_size()?;
+                        let widget_width = window_size.width as f64;
+                        let widget_height = window_size.height as f64;
 
-                        // 🎯 NOUVELLE POSITION : Coin bas-droit VISIBLE
-                        // 20px de marge à droite et en bas
                         let x = (screen_width - widget_width) / 2.0;
                         let y = (screen_height - widget_height) / 2.0;
 

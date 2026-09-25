@@ -473,19 +473,15 @@ body {
    CHAT CONTAINER (Mode déployé)
    ============================================ */
 .chat-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 450px;
-  height: 700px;
+  /* Position, taille, coins arrondis et ombre : voir la règle
+     canonique #chatContainer plus bas dans ce fichier. Les dupliquer
+     ici ne fait que réintroduire le conflit corrigé (débordement du
+     glow en bas à droite, cf. historique). */
   background: var(--bg-main);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 0;
-  box-shadow: none;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   opacity: 1;
   transform: scale(1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1141,12 +1137,6 @@ body {
    RESPONSIVE (Optionnel)
    ============================================ */
 @media (max-width: 768px) {
-  .chat-container {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-  }
-
   .settings-panel {
     width: 100%;
     right: -100%;
@@ -2925,16 +2915,16 @@ kbd {
 }
 
 /* ============================================
-   CORRECTIF HAUTEUR CHATBOT
-   À ajouter dans styles.css
+   CHAT CONTAINER - taille et position canoniques
+   (seule règle qui fixe position/taille/ombre : le sélecteur par
+   ID gagne toujours sur .chat-container plus haut dans ce fichier,
+   donc il ne doit y avoir qu'UNE SEULE source de vérité ici pour
+   éviter que la carte et la fenêtre Tauri se désynchronisent - voir
+   src-tauri/tauri.conf.json pour la taille de fenêtre correspondante)
    ============================================ */
-
-/* Container principal du chat */
 #chatContainer {
   width: 400px;
-  height: 600px; /* Au lieu de 400px */
-  min-height: 500px;
-  max-height: 800px;
+  height: 600px;
   display: flex;
   flex-direction: column;
   background: var(--bg-main);
@@ -2976,23 +2966,6 @@ kbd {
   /* PAS de transition sur height ou transform */
 }
 
-/* ============================================
-   DIMENSIONS RESPONSIVE
-   ============================================ */
-
-@media (max-height: 700px) {
-  #chatContainer {
-    height: 500px;
-    max-height: 90vh;
-  }
-}
-
-@media (max-height: 600px) {
-  #chatContainer {
-    height: 700px;
-    max-height: 100vh;
-  }
-}
 
 /* ============================================
    BOUTON FLOTTANT
