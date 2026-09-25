@@ -1,27 +1,28 @@
-# HRTélécoms Assistant
+# Charly — Assistant IA de bureau
 
-> Assistant conversationnel intelligent avec interface moderne et animations fluides
+> Assistant conversationnel avec interface flottante, animations Lottie, reconnaissance vocale et synthèse vocale.
 
-Application desktop native construite avec **Tauri**, **Lottie** et connectée à une API **Laravel**.
+Application desktop native construite avec **Tauri 2**, connectée par défaut à un backend **Laravel**, avec un **mode local autonome** (clé OpenAI personnelle + base SQLite embarquée) pour fonctionner sans compte ni serveur.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![Tauri](https://img.shields.io/badge/Tauri-2.0-orange.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ---
 
 ## Fonctionnalités
 
-- **11 animations Lottie contextuelles** (idle, thinking, happy, error, etc.)
-- **Chat intelligent** connecté à une API Laravel
-- **Authentification utilisateur** (login/logout)
-- **Historique de conversation** persistant
+- **Animations Lottie contextuelles** (accueil, réflexion, réponse, erreur, etc.)
+- **Deux modes de fonctionnement** (voir plus bas) :
+  - **Cloud** : compte utilisateur + backend Laravel (recherche web incluse)
+  - **Local** : clé API OpenAI personnelle + historique stocké en local (SQLite), sans compte ni serveur
+- **Reconnaissance vocale** (dictée du message) et **synthèse vocale** (lecture des réponses via l'API OpenAI)
+- **Résultats de recherche web** enrichis dans le chat (mode cloud)
+- **Historique de conversation** persistant, avec favoris
 - **Thèmes clair/sombre**
-- **Toujours au premier plan**
-- **Ultra-léger** (~3-5 MB vs 50+ MB Electron)
-- **Interface transparente**
+- **Toujours au premier plan**, fenêtre transparente sans décorations
+- **Ultra-léger** (quelques Mo vs 50+ Mo pour un équivalent Electron)
 - **Raccourcis clavier**
-- **Prêt pour Android/iOS**
+- **Base prête pour Android** (`src-tauri/gen/android`)
 
 ---
 
@@ -40,22 +41,24 @@ Application desktop native construite avec **Tauri**, **Lottie** et connectée �
 
 ```bash
 # Cloner le repository
-git clone https://github.com/votre-username/assistant-hrt.git
-cd assistant-hrt
+git clone https://github.com/doko972/Persephone-chatbot-IA.git
+cd Persephone-chatbot-IA
 
-
-
-# Installer les dépendances
+# Installer les dépendances (JS + plugins Tauri)
 npm install
 
-# si pas installé : 
+# si pas installé :
 winget install Microsoft.VisualStudio.2022.BuildTools
 
-vérifier cargo et rustc => cargo --version, rustc --version
-
-# Configurer l'API (éditer src/renderer.js ligne ~240)
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+# vérifier cargo et rustc => cargo --version, rustc --version
 ```
+
+Aucune configuration de fichier n'est nécessaire pour démarrer :
+- Le **mode cloud** pointe par défaut vers le backend de production
+  (`API_BASE_URL` dans [src/renderer.js](src/renderer.js), ligne ~489) — à
+  changer uniquement si vous utilisez votre propre backend Laravel.
+- Le **mode local** se configure entièrement depuis l'app (Paramètres →
+  Mode de fonctionnement → coller une clé API OpenAI).
 
 ---
 
@@ -87,19 +90,41 @@ npm run tauri android build
 ## Structure
 
 ```
-assistant-hrt/
-├── src/                    # Frontend
+Persephone-chatbot-IA/
+├── src/                          # Frontend
 │   ├── index.html
-│   ├── styles.css
-│   ├── renderer.js
-│   └── animations/         # 11 animations Lottie
-├── src-tauri/              # Backend Rust
-│   ├── src/lib.rs
+│   ├── styles.css, *.css         # Styles (chat, historique, voix, TTS, recherche...)
+│   ├── renderer.js                # Logique principale du chat
+│   ├── local-mode.js              # Mode local : clé OpenAI perso + SQLite
+│   ├── conversation-history.js    # Panneau historique (cloud + local)
+│   ├── voice-manager.js           # Reconnaissance vocale
+│   ├── text-to-speech.js          # Synthèse vocale (OpenAI TTS)
+│   ├── search-results-renderer.js # Rendu des résultats de recherche web
+│   ├── ui-polish.js               # Timestamps, scroll, détails UI
+│   ├── animations/                # Animations Lottie
+│   └── fonts/                     # Font Awesome (icônes)
+├── src-tauri/                     # Backend Rust / config Tauri
+│   ├── src/lib.rs                 # Plugins (http, shell, sql), positionnement fenêtre
 │   ├── Cargo.toml
-│   ├── tauri.conf.json
+│   ├── tauri.conf.json            # Taille de fenêtre, CSP, capacités
+│   ├── capabilities/default.json  # Permissions réseau/SQL
 │   └── icons/
 └── package.json
 ```
+
+---
+
+## Deux modes de fonctionnement
+
+| | Mode cloud (par défaut) | Mode local |
+|---|---|---|
+| Compte requis | Oui (login) | Non |
+| Génération des réponses | Backend Laravel | Appel direct à OpenAI (`gpt-4o-mini`) avec votre propre clé |
+| Recherche web dans le chat | Oui | Non (hors scope pour l'instant) |
+| Stockage de l'historique | Serveur Laravel | Base SQLite locale (`charly.db`), sur l'appareil uniquement |
+| Clé OpenAI (voix) | Fournie par le backend | Votre clé personnelle |
+
+Le choix se fait dans **Paramètres → Mode de fonctionnement**, à tout moment.
 
 ---
 
@@ -111,8 +136,8 @@ assistant-hrt/
 {
   "app": {
     "windows": [{
-      "width": 480,
-      "height": 750,
+      "width": 460,
+      "height": 680,
       "decorations": false,
       "transparent": true,
       "alwaysOnTop": true,
@@ -130,27 +155,31 @@ assistant-hrt/
 |----------|----------|
 | `rustc` not found | Redémarrer le terminal après installation Rust |
 | `link.exe` not found | Installer Visual Studio Build Tools |
-| CORS error | Configurer `config/cors.php` dans Laravel |
+| CORS error (mode cloud) | Configurer `config/cors.php` dans Laravel |
 | Icônes manquantes | Ajouter `font-src` au CSP |
+| TTS/chat silencieux en mode local | Vérifier que la clé API OpenAI est bien enregistrée dans Paramètres |
 
 ---
 
-## ⌨Raccourcis
+## ⌨ Raccourcis
 
 | Raccourci | Action |
 |-----------|--------|
 | `Ctrl + N` | Nouvelle conversation |
 | `Ctrl + M` | Minimiser/Restaurer |
+| `Ctrl + ,` | Ouvrir/fermer les paramètres |
+| `Ctrl + /` | Afficher l'aide |
+| `Ctrl + Entrée` | Envoyer le message (en cours de saisie) |
 | `F11` | Plein écran |
-| `Escape` | Fermer/Minimiser |
+| `Escape` | Fermer le panneau actif / minimiser |
 
 ---
 
 ## Performance
 
-- **Taille** : 3-5 MB (95% plus léger qu'Electron)
-- **RAM** : 30-50 MB (70% moins qu'Electron)
-- **Démarrage** : <1s (3x plus rapide)
+- **Taille** : quelques Mo (bien plus léger qu'un équivalent Electron)
+- **RAM** : usage réduit grâce au WebView natif
+- **Démarrage** : quasi instantané
 
 ---
 
@@ -168,19 +197,21 @@ Les contributions sont bienvenues !
 
 ## Changelog
 
+### v1.1.0
+- Mode local : clé API OpenAI personnelle + historique en base SQLite embarquée, sans compte ni serveur
+- Reconnaissance vocale et synthèse vocale (OpenAI TTS)
+- Résultats de recherche web enrichis dans le chat (mode cloud)
+- Système de favoris dans l'historique de conversation
+- Durcissement sécurité : correctifs XSS sur le rendu de l'historique et des résultats de recherche, CSP resserrée (retrait d'`unsafe-inline` sur les scripts, restriction des sources d'images)
+- Correction d'un défaut d'affichage (ombre du widget tronquée en bas à droite)
+
 ### v1.0.0 (2025-11-08)
-- 11 animations Lottie
+- Animations Lottie
 - Chat avec API Laravel
 - Authentification
 - Historique persistant
 - Thèmes clair/sombre
 - Support multi-plateforme
-
----
-
-## 📄 License
-
-MIT License - voir [LICENSE](LICENSE)
 
 ---
 
@@ -196,16 +227,17 @@ MIT License - voir [LICENSE](LICENSE)
 
 - [Tauri](https://tauri.app/) - Framework natif
 - [Lottie](https://lottiefiles.com/) - Animations
-- [Laravel](https://laravel.com/) - API backend
+- [Laravel](https://laravel.com/) - API backend (mode cloud)
+- [OpenAI](https://openai.com/) - Génération de texte et synthèse vocale
 - [Font Awesome](https://fontawesome.com/) - Icônes
 
 ---
 
 ## Roadmap
 
-- [ ] 🎤 Mode vocal
+- [ ] 🔍 Recherche web dans le mode local
 - [ ] 🔔 Notifications natives
-- [ ] 📱 Apps mobiles
+- [ ] 📱 Apps mobiles (build Android à finaliser)
 - [ ] 🌍 Multi-langues
 
 ---
